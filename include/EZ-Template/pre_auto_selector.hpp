@@ -1,10 +1,10 @@
 #pragma once
 #include "main.h"
-
+#include <memory.h>
 namespace ez
 {
-extern  pros::ADIDigitalIn* left_limit_switch;
-extern pros::ADIDigitalIn* right_limit_switch;
+extern pros::ADIDigitalIn left_limit_switch;
+extern pros::ADIDigitalIn right_limit_switch;
 /**
 * Initialize two limitswithces to change pages on the lcd
 *
