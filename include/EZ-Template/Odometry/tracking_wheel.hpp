@@ -8,7 +8,10 @@ public:
   Tracking_Wheel(pros::ADIEncoder encoder);
   double get_value();
   void reset_position();
+  double offset;
+  double ratio;
+  double wheel_size;
 private:
-//  std::_Bind<double()> getValueFunc;
-//  std::_Bind<void()> resetFunc;
+  std::function<double()> get_value_func;
+  std::function<void()> reset_func;
 };
