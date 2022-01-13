@@ -102,7 +102,7 @@ Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_por
   RATIO = ratio;
   CARTRIDGE = ticks;
   TICK_PER_INCH = get_tick_per_inch();
-
+  
   set_defaults();
 }
 
