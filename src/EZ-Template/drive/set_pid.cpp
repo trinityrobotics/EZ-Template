@@ -39,10 +39,10 @@ e_mode Drive::get_mode() { return mode; }
 
 // Set drive PID
 void Drive::set_drive_pid(double target, int speed, bool slew_on, bool toggle_heading) {
-  TICK_PER_INCH = get_tick_per_inch();
-
+  LEFT_TICK_PER_INCH = get_tick_per_inch(left_tracker);
+  RIGHT_TICK_PER_INCH = get_tick_per_inch(right_tracker);
   // Print targets
-  if (print_toggle) printf("Drive Started... Target Value: %f (%f ticks)", target, target * TICK_PER_INCH);
+  if (print_toggle) printf("Drive Started... Target Value: %f (%f L ticks, %f R ticks)", target, target * LEFT_TICK_PER_INCH, target * RIGHT_TICK_PER_INCH);
   if (slew_on && print_toggle) printf(" with slew");
   if (print_toggle) printf("\n");
 
@@ -56,8 +56,9 @@ void Drive::set_drive_pid(double target, int speed, bool slew_on, bool toggle_he
   double l_target_encoder, r_target_encoder;
 
   // Figure actual target value
-  l_target_encoder = l_start + (target * TICK_PER_INCH);
-  r_target_encoder = r_start + (target * TICK_PER_INCH);
+
+  l_target_encoder = l_start + (target * LEFT_TICK_PER_INCH);
+  r_target_encoder = r_start + (target * RIGHT_TICK_PER_INCH);
 
   // Figure out if going forward or backward
   if (l_target_encoder < l_start && r_target_encoder < r_start) {
@@ -77,8 +78,8 @@ void Drive::set_drive_pid(double target, int speed, bool slew_on, bool toggle_he
   rightPID.set_target(r_target_encoder);
 
   // Initialize slew
-  slew_initialize(left_slew, slew_on, max_speed, l_target_encoder, left_sensor(), l_start, is_backwards);
-  slew_initialize(right_slew, slew_on, max_speed, r_target_encoder, right_sensor(), r_start, is_backwards);
+  slew_initialize(left_slew, LEFT_TICK_PER_INCH, slew_on, max_speed, l_target_encoder, left_sensor(), l_start, is_backwards);
+  slew_initialize(right_slew, RIGHT_TICK_PER_INCH, slew_on, max_speed, r_target_encoder, right_sensor(), r_start, is_backwards);
 
   // Run task
   set_mode(DRIVE);

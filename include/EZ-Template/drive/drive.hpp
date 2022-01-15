@@ -11,9 +11,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #include <tuple>
 
 #include "EZ-Template/PID.hpp"
+#include "EZ-Template/Odometry/tracking_wheel.hpp"
 #include "EZ-Template/util.hpp"
 #include "pros/motors.h"
-
 using namespace ez;
 
 class Drive {
@@ -58,26 +58,7 @@ class Drive {
    */
   pros::Imu imu;
 
-  /**
-   * Left tracking wheel.
-   */
-  pros::ADIEncoder left_tracker;
-
-  /**
-   * Right tracking wheel.
-   */
-  pros::ADIEncoder right_tracker;
-
-  /**
-   * Left rotation tracker.
-   */
-  pros::Rotation left_rotation;
-
-  /**
-   * Right rotation tracker.
-   */
-  pros::Rotation right_rotation;
-
+  
   /**
    * PID objects.
    */
@@ -113,8 +94,7 @@ class Drive {
    * Tasks for autonomous.
    */
   pros::Task ez_auto;
-
-  /**
+/**
    * Creates a Drive Controller using internal encoders.
    *
    * \param left_motor_ports
@@ -197,7 +177,25 @@ class Drive {
    *        Make ports negative if reversed!
    */
   Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports, int imu_port, double wheel_diameter, double ratio, int left_rotation_port, int right_rotation_port);
+  /**
+   * Creates a Drive Controller using internal encoders.
+   *
+   * \param left_motor_ports
+   *        Input {1, -2...}.  Make ports negative if reversed!
+   * \param right_motor_ports
+   *        Input {-3, 4...}.  Make ports negative if reversed!
+   * \param imu_port
+   *        Port the IMU is plugged into.
+   * \param wheel_diameter
+   *        Diameter of your drive wheels.  Remember 4" is 4.125"!
+   * \param ticks
+   *        Motor cartridge RPM
+   * \param ratio
+   *        External gear ratio, wheel gear / motor gear.
+   */
+  Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports, int imu_port, Tracking_Wheel left_tracker, Tracking_Wheel right_tracker, Tracking_Wheel* center_tracker = nullptr);
 
+  
   /**
    * Sets drive defaults.
    */
@@ -647,7 +645,7 @@ class Drive {
   /**
    * Returns current tick_per_inch()
    */
-  double get_tick_per_inch();
+  double get_tick_per_inch(Tracking_Wheel* wheel);
 
   /**
    * Returns current tick_per_inch()
@@ -687,7 +685,7 @@ class Drive {
    * \param backwards
    *        slew direction for constants
    */
-  void slew_initialize(slew_ &input, bool slew_on, double max_speed, double target, double current, double start, bool backwards);
+  void slew_initialize(slew_ &input, double tick_per_inch, bool slew_on, double max_speed, double target, double current, double start, bool backwards);
 
   /**
    * Calculate slew.
@@ -698,8 +696,13 @@ class Drive {
    *        current sensor value
    */
   double slew_calculate(slew_ &input, double current);
-
+  double x_position;
+  double y_position;
+  double theta;
  private:  // !Auton
+  Tracking_Wheel* left_tracker;
+  Tracking_Wheel* right_tracker;
+  Tracking_Wheel* center_tracker;
   bool drive_toggle = true;
   bool print_toggle = true;
   int swing_min = 0;
@@ -719,12 +722,10 @@ class Drive {
    * Tick per inch calculation.
    */
   double TICK_PER_REV;
-  double TICK_PER_INCH;
+  double LEFT_TICK_PER_INCH;
+  double RIGHT_TICK_PER_INCH;
   double CIRCUMFERENCE;
 
-  double CARTRIDGE;
-  double RATIO;
-  double WHEEL_DIAMETER;
 
   /**
    * Max speed for autonomous.

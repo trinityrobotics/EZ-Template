@@ -21,12 +21,12 @@ void Drive::set_slew_distance(int fwd, int rev) {
 }
 
 // Initialize slew
-void Drive::slew_initialize(slew_ &input, bool slew_on, double max_speed, double target, double current, double start, bool backwards) {
+void Drive::slew_initialize(slew_ &input, double tick_per_inch, bool slew_on, double max_speed, double target, double current, double start, bool backwards) {
   input.enabled = slew_on;
   input.max_speed = max_speed;
 
   input.sign = util::sgn(target - current);
-  input.x_intercept = start + ((SLEW_DISTANCE[backwards] * input.sign) * TICK_PER_INCH);
+  input.x_intercept = start + ((SLEW_DISTANCE[backwards] * input.sign) * tick_per_inch);
   input.y_intercept = max_speed * input.sign;
   input.slope = ((input.sign * SLEW_MIN_POWER[backwards]) - input.y_intercept) / (input.x_intercept - 0 - start);  // y2-y1 / x2-x1
 }

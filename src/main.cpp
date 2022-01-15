@@ -1,4 +1,6 @@
 #include "main.h"
+#include "EZ-Template/Odometry/tracking_wheel.hpp"
+#include "pros/motors.hpp"
 
 
 // Chassis constructor
@@ -14,21 +16,12 @@ Drive chassis (
   // IMU Port
   ,20
 
-  // Wheel Diameter (Remember, 4" wheels are actually 4.125!)
-  //    (or tracking wheel diameter)
-  ,2.5
 
-  // Cartridge RPM
-  //   (or tick per rotation if using tracking wheels)
+  ,4.125
+  
   ,1200
 
-  // External Gear Ratio (MUST BE DECIMAL)
-  //    (or gear ratio of tracking wheel)
-  // eg. if your drive is 84:36 where the 36t is powered, your RATIO would be 2.333.
-  // eg. if your drive is 36:60 where the 60t is powered, your RATIO would be 0.6.
-  ,2
-
-
+  ,.66667
   // Uncomment if using tracking wheels
   /*
   // Left Tracking Wheel Ports (negative port will reverse it!)

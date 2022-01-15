@@ -80,8 +80,10 @@ void Drive::wait_until(double target) {
   // If robot is driving...
   if (mode == DRIVE) {
     // Calculate error between current and target (target needs to be an in between position)
-    int l_tar = l_start + (target * TICK_PER_INCH);
-    int r_tar = r_start + (target * TICK_PER_INCH);
+    LEFT_TICK_PER_INCH = get_tick_per_inch(left_tracker);
+    RIGHT_TICK_PER_INCH = get_tick_per_inch(right_tracker);
+    int l_tar = l_start + (target * LEFT_TICK_PER_INCH);
+    int r_tar = r_start + (target * RIGHT_TICK_PER_INCH);
     int l_error = l_tar - left_sensor();
     int r_error = r_tar - right_sensor();
     int l_sgn = util::sgn(l_error);
