@@ -36,9 +36,6 @@ Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_por
     pros::Motor temp(abs(i), util::is_reversed(i));
     right_motors.push_back(temp);
   }
-  x_position = 0;
-  y_position = 0;
-  theta = 0;
   LEFT_TICK_PER_INCH = get_tick_per_inch(&left_tracker);
   RIGHT_TICK_PER_INCH = get_tick_per_inch(&right_tracker);
   set_defaults();
@@ -62,9 +59,6 @@ Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_por
     pros::Motor temp(abs(i), util::is_reversed(i));
     right_motors.push_back(temp);
   }
-  x_position = 0;
-  y_position = 0;
-  theta = 0;
   LEFT_TICK_PER_INCH = get_tick_per_inch(&left_tracker);
   RIGHT_TICK_PER_INCH = get_tick_per_inch(&right_tracker);
   set_defaults();
@@ -176,6 +170,9 @@ Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_por
   set_defaults();
 }
 void Drive::set_defaults() {
+  // Set imu refresh rate
+  imu.set_data_rate(5);
+
   // PID Constants
   headingPID = {11, 0, 20, 0};
   forward_drivePID = {0.45, 0, 5, 0};
@@ -209,6 +206,9 @@ void Drive::set_defaults() {
 
   // Disables limit switch for auto selector
   as::limit_switch_lcd_initialize(nullptr, nullptr);
+
+  // Reset odom
+  reset_odom();
 }
 
 double Drive::get_tick_per_inch(Tracking_Wheel* wheel) {

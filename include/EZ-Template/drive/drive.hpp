@@ -714,9 +714,14 @@ class Drive {
    */
   double slew_calculate(slew_& input, double current);
 
-  double x_position;
-  double y_position;
-  double theta;
+  double x_pos = 0;
+  double y_pos = 0;
+  double theta = 0;
+  void tracking();
+  void reset_odom();
+  void set_x(double x);
+  void set_y(double y);
+  void set_theta(double a);
   Tracking_Wheel* left_tracker;
   Tracking_Wheel* right_tracker;
   Tracking_Wheel* center_tracker;
