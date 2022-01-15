@@ -3,39 +3,24 @@
 #include "pros/motors.hpp"
 
 
+//Tracking_Wheel left_p  {chassis.left_motors[0],  2.5, 600};
+//Tracking_Wheel right_p {chassis.right_motors[0], 2.5, 600};
+
 // Chassis constructor
 Drive chassis (
   // Left Chassis Ports (negative port will reverse it!)
-  //   the first port is the sensored port (when trackers are not used!)
   {-15, -16}
 
   // Right Chassis Ports (negative port will reverse it!)
-  //   the first port is the sensored port (when trackers are not used!)
   ,{6, 5}
 
-  // IMU Port
+  // Left Tracker
+  ,Tracking_Wheel{pros::Motor(15,true),  2.5, 600}
+
+  // Right Tracker
+  ,Tracking_Wheel{pros::Motor(6),  2.5, 600}
+
   ,20
-
-
-  ,4.125
-  
-  ,1200
-
-  ,.66667
-  // Uncomment if using tracking wheels
-  /*
-  // Left Tracking Wheel Ports (negative port will reverse it!)
-  // ,{1, 2} // 3 wire encoder
-  // ,8 // Rotation sensor
-
-  // Right Tracking Wheel Ports (negative port will reverse it!)
-  // ,{-3, -4} // 3 wire encoder
-  // ,-9 // Rotation sensor
-  */
-
-  // Uncomment if tracking wheels are plugged into a 3 wire expander
-  // 3 Wire Port Expander Smart Port
-  // ,1
 );
 
 
@@ -72,6 +57,12 @@ void initialize() {
     Auton("Combine all 3 movements", combining_movements),
     Auton("Interference\n\nAfter driving forward, robot performs differently if interfered or not.", interfered_example),
   });
+
+  //chassis.reset_drive_sensor();
+  chassis.left_tracker->reset_position();
+  while (true) {
+    pros::delay(ez::util::DELAY_TIME);
+  }
 
   // Initialize chassis and auton selector
   chassis.initialize();

@@ -10,10 +10,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #include <iostream>
 #include <tuple>
 
-#include "EZ-Template/PID.hpp"
 #include "EZ-Template/Odometry/tracking_wheel.hpp"
+#include "EZ-Template/PID.hpp"
 #include "EZ-Template/util.hpp"
 #include "pros/motors.h"
+
 using namespace ez;
 
 class Drive {
@@ -58,7 +59,6 @@ class Drive {
    */
   pros::Imu imu;
 
-  
   /**
    * PID objects.
    */
@@ -94,7 +94,8 @@ class Drive {
    * Tasks for autonomous.
    */
   pros::Task ez_auto;
-/**
+
+  /**
    * Creates a Drive Controller using internal encoders.
    *
    * \param left_motor_ports
@@ -177,25 +178,41 @@ class Drive {
    *        Make ports negative if reversed!
    */
   Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports, int imu_port, double wheel_diameter, double ratio, int left_rotation_port, int right_rotation_port);
+
   /**
-   * Creates a Drive Controller using internal encoders.
+   * Creates a Drive Controller using three tracking wheels.
    *
    * \param left_motor_ports
    *        Input {1, -2...}.  Make ports negative if reversed!
    * \param right_motor_ports
    *        Input {-3, 4...}.  Make ports negative if reversed!
+   * \param left_tracker
+   *        Tracking_Wheel object.
+   * \param right_tracker
+   *        Tracking_Wheel object.
+   * \param center_tracker
+   *        Tracking_Wheel object.
    * \param imu_port
    *        Port the IMU is plugged into.
-   * \param wheel_diameter
-   *        Diameter of your drive wheels.  Remember 4" is 4.125"!
-   * \param ticks
-   *        Motor cartridge RPM
-   * \param ratio
-   *        External gear ratio, wheel gear / motor gear.
    */
-  Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports, int imu_port, Tracking_Wheel left_tracker, Tracking_Wheel right_tracker, Tracking_Wheel* center_tracker = nullptr);
+  Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports, Tracking_Wheel left_tracker, Tracking_Wheel right_tracker, Tracking_Wheel center_tracker, int imu_port = -1);
 
-  
+  /**
+   * Creates a Drive Controller using two tracking wheels.
+   *
+   * \param left_motor_ports
+   *        Input {1, -2...}.  Make ports negative if reversed!
+   * \param right_motor_ports
+   *        Input {-3, 4...}.  Make ports negative if reversed!
+   * \param left_tracker
+   *        Tracking_Wheel object.
+   * \param right_tracker
+   *        Tracking_Wheel object.
+   * \param imu_port
+   *        Port the IMU is plugged into.
+   */
+  Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports, Tracking_Wheel left_tracker, Tracking_Wheel right_tracker, int imu_port = -1);
+
   /**
    * Sets drive defaults.
    */
@@ -561,7 +578,7 @@ class Drive {
   /**
    * Set Either the headingPID, turnPID, forwardPID, backwardPID, activeBrakePID, or swingPID
    */
-  void set_pid_constants(PID *pid, double p, double i, double d, double p_start_i);
+  void set_pid_constants(PID* pid, double p, double i, double d, double p_start_i);
 
   /**
    * Sets minimum power for swings when kI and startI are enabled.
@@ -685,7 +702,7 @@ class Drive {
    * \param backwards
    *        slew direction for constants
    */
-  void slew_initialize(slew_ &input, double tick_per_inch, bool slew_on, double max_speed, double target, double current, double start, bool backwards);
+  void slew_initialize(slew_& input, double tick_per_inch, bool slew_on, double max_speed, double target, double current, double start, bool backwards);
 
   /**
    * Calculate slew.
@@ -695,14 +712,16 @@ class Drive {
    * \param current
    *        current sensor value
    */
-  double slew_calculate(slew_ &input, double current);
+  double slew_calculate(slew_& input, double current);
+
   double x_position;
   double y_position;
   double theta;
- private:  // !Auton
   Tracking_Wheel* left_tracker;
   Tracking_Wheel* right_tracker;
   Tracking_Wheel* center_tracker;
+
+ private:  // !Auton
   bool drive_toggle = true;
   bool print_toggle = true;
   int swing_min = 0;
@@ -725,7 +744,6 @@ class Drive {
   double LEFT_TICK_PER_INCH;
   double RIGHT_TICK_PER_INCH;
   double CIRCUMFERENCE;
-
 
   /**
    * Max speed for autonomous.
@@ -797,7 +815,7 @@ class Drive {
   /**
    * Function for button presses.
    */
-  void button_press(button_ *input_name, int button, std::function<void()> changeCurve, std::function<void()> save);
+  void button_press(button_* input_name, int button, std::function<void()> changeCurve, std::function<void()> save);
 
   /**
    * The left and right curve scalers.

@@ -18,15 +18,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 using namespace ez;
 
-// Constructor for integrated encoders
+// Constructor for 3 tracking wheels
 Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports,
-             int imu_port, Tracking_Wheel left_tracker, Tracking_Wheel right_tracker, Tracking_Wheel* center_tracker)
+             Tracking_Wheel left_tracker, Tracking_Wheel right_tracker, Tracking_Wheel center_tracker, int imu_port)
     : imu(imu_port),
       ez_auto([this] { this->ez_auto_task(); }) {
   is_tracker = DRIVE_INTEGRATED;
   this->left_tracker = &left_tracker;
   this->right_tracker = &right_tracker;
-  this->center_tracker = center_tracker;
+  this->center_tracker = &center_tracker;
   // Set ports to a global vector
   for (auto i : left_motor_ports) {
     pros::Motor temp(abs(i), util::is_reversed(i));
@@ -43,6 +43,34 @@ Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_por
   RIGHT_TICK_PER_INCH = get_tick_per_inch(&right_tracker);
   set_defaults();
 }
+
+// Constructor for 2 tracking wheels
+Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports,
+             Tracking_Wheel left_tracker, Tracking_Wheel right_tracker, int imu_port)
+    : imu(imu_port),
+      ez_auto([this] { this->ez_auto_task(); }) {
+  is_tracker = DRIVE_INTEGRATED;
+  this->left_tracker = &left_tracker;
+  this->right_tracker = &right_tracker;
+  // this->center_tracker = &center_tracker;
+  //  Set ports to a global vector
+  for (auto i : left_motor_ports) {
+    pros::Motor temp(abs(i), util::is_reversed(i));
+    left_motors.push_back(temp);
+  }
+  for (auto i : right_motor_ports) {
+    pros::Motor temp(abs(i), util::is_reversed(i));
+    right_motors.push_back(temp);
+  }
+  x_position = 0;
+  y_position = 0;
+  theta = 0;
+  LEFT_TICK_PER_INCH = get_tick_per_inch(&left_tracker);
+  RIGHT_TICK_PER_INCH = get_tick_per_inch(&right_tracker);
+  set_defaults();
+}
+
+// Constructor for integrated encoders
 Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports,
              int imu_port, double wheel_diameter, double ticks, double ratio)
     : imu(imu_port),
@@ -58,8 +86,8 @@ Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_por
     pros::Motor temp(abs(i), util::is_reversed(i));
     right_motors.push_back(temp);
   }
-  left_tracker = new Tracking_Wheel(left_motors[0], ratio, wheel_diameter, ticks);
-  right_tracker = new Tracking_Wheel(right_motors[0], ratio, wheel_diameter, ticks);
+  left_tracker = new Tracking_Wheel(left_motors[0], wheel_diameter, ticks, 0, ratio);
+  right_tracker = new Tracking_Wheel(right_motors[0], wheel_diameter, ticks, 0, ratio);
   // Set constants for tick_per_inch calculation
 
   LEFT_TICK_PER_INCH = get_tick_per_inch(left_tracker);
@@ -85,8 +113,8 @@ Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_por
 
   // Set constants for tick_per_inch calculation
 
-  left_tracker = new Tracking_Wheel(pros::ADIEncoder(abs(left_tracker_ports[0]), abs(left_tracker_ports[1]), util::is_reversed(left_tracker_ports[0])), ratio, wheel_diameter, ticks);
-  right_tracker = new Tracking_Wheel(pros::ADIEncoder(abs(right_tracker_ports[0]), abs(right_tracker_ports[1]), util::is_reversed(right_tracker_ports[0])), ratio, wheel_diameter, ticks);
+  left_tracker = new Tracking_Wheel(pros::ADIEncoder(abs(left_tracker_ports[0]), abs(left_tracker_ports[1]), util::is_reversed(left_tracker_ports[0])), wheel_diameter, ticks, 0, ratio);
+  right_tracker = new Tracking_Wheel(pros::ADIEncoder(abs(right_tracker_ports[0]), abs(right_tracker_ports[1]), util::is_reversed(right_tracker_ports[0])), wheel_diameter, ticks, 0, ratio);
   // Set constants for tick_per_inch calculation
 
   LEFT_TICK_PER_INCH = get_tick_per_inch(left_tracker);
@@ -112,8 +140,8 @@ Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_por
 
   // Set constants for tick_per_inch calculation
 
-  left_tracker = new Tracking_Wheel(pros::ADIEncoder({expander_smart_port, abs(left_tracker_ports[0]), abs(left_tracker_ports[1])}, util::is_reversed(left_tracker_ports[0])), ratio, wheel_diameter, ticks);
-  right_tracker = new Tracking_Wheel(pros::ADIEncoder({expander_smart_port, abs(right_tracker_ports[0]), abs(right_tracker_ports[1])}, util::is_reversed(right_tracker_ports[0])), ratio, wheel_diameter, ticks);
+  left_tracker = new Tracking_Wheel(pros::ADIEncoder({expander_smart_port, abs(left_tracker_ports[0]), abs(left_tracker_ports[1])}, util::is_reversed(left_tracker_ports[0])), wheel_diameter, ticks, 0, ratio);
+  right_tracker = new Tracking_Wheel(pros::ADIEncoder({expander_smart_port, abs(right_tracker_ports[0]), abs(right_tracker_ports[1])}, util::is_reversed(right_tracker_ports[0])), wheel_diameter, ticks, 0, ratio);
   // Set constants for tick_per_inch calculation
 
   LEFT_TICK_PER_INCH = get_tick_per_inch(left_tracker);
@@ -139,8 +167,8 @@ Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_por
 
   // Set constants for tick_per_inch calculation
 
-  left_tracker = new Tracking_Wheel(pros::Rotation(left_rotation_port).set_reversed(util::is_reversed(left_rotation_port)), ratio, wheel_diameter, 4096);
-  right_tracker = new Tracking_Wheel(pros::Rotation(right_rotation_port).set_reversed(util::is_reversed(right_rotation_port)), ratio, wheel_diameter, 4096);
+  left_tracker = new Tracking_Wheel(pros::Rotation(left_rotation_port).set_reversed(util::is_reversed(left_rotation_port)), wheel_diameter, 4096, 0, ratio);
+  right_tracker = new Tracking_Wheel(pros::Rotation(right_rotation_port).set_reversed(util::is_reversed(right_rotation_port)), wheel_diameter, 4096, 0, ratio);
   // Set constants for tick_per_inch calculation
 
   LEFT_TICK_PER_INCH = get_tick_per_inch(left_tracker);
@@ -229,14 +257,14 @@ void Drive::reset_drive_sensor() {
 }
 
 int Drive::right_sensor() { return right_tracker->get_value(); }
-int Drive::right_velocity() { return right_motors.front().get_actual_velocity(); }
-double Drive::right_mA() { return right_motors.front().get_current_draw(); }
-bool Drive::right_over_current() { return right_motors.front().is_over_current(); }
+int Drive::right_velocity() { return right_motors[0].get_actual_velocity(); }
+double Drive::right_mA() { return right_motors[0].get_current_draw(); }
+bool Drive::right_over_current() { return right_motors[0].is_over_current(); }
 
 int Drive::left_sensor() { return left_tracker->get_value(); }
-int Drive::left_velocity() { return left_motors.front().get_actual_velocity(); }
-double Drive::left_mA() { return left_motors.front().get_current_draw(); }
-bool Drive::left_over_current() { return left_motors.front().is_over_current(); }
+int Drive::left_velocity() { return left_motors[0].get_actual_velocity(); }
+double Drive::left_mA() { return left_motors[0].get_current_draw(); }
+bool Drive::left_over_current() { return left_motors[0].is_over_current(); }
 
 void Drive::reset_gyro(double new_heading) { imu.set_rotation(new_heading); }
 double Drive::get_gyro() { return imu.get_rotation(); }

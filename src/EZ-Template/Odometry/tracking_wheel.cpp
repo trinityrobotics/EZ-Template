@@ -6,22 +6,22 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "tracking_wheel.hpp"
 
-Tracking_Wheel::Tracking_Wheel(pros::Motor motor, double offset, double ratio, double wheel_size, double ticks) {
+Tracking_Wheel::Tracking_Wheel(pros::Motor motor, double wheel_diameter, double ticks_per_rotation, double offset, double ratio) {
   get_value_func = std::bind(&pros::Motor::get_position, motor);
   reset_func = std::bind(&pros::Motor::tare_position, motor);
-  set_constants(offset, ratio, wheel_size, ticks);
+  set_constants(offset, ratio, wheel_diameter, ticks_per_rotation);
 }
 
-Tracking_Wheel::Tracking_Wheel(pros::Rotation rotationSensor, double offset, double ratio, double wheel_size, double ticks) {
+Tracking_Wheel::Tracking_Wheel(pros::Rotation rotationSensor, double wheel_diameter, double ticks_per_rotation, double offset, double ratio) {
   get_value_func = std::bind(&pros::Rotation::get_position, rotationSensor);
   reset_func = std::bind(&pros::Rotation::reset_position, rotationSensor);
-  set_constants(offset, ratio, wheel_size, ticks);
+  set_constants(offset, ratio, wheel_diameter, ticks_per_rotation);
 }
 
-Tracking_Wheel::Tracking_Wheel(pros::ADIEncoder encoder, double offset, double ratio, double wheel_size, double ticks) {
+Tracking_Wheel::Tracking_Wheel(pros::ADIEncoder encoder, double wheel_diameter, double ticks_per_rotation, double offset, double ratio) {
   get_value_func = std::bind(&pros::ADIEncoder::get_value, encoder);
   reset_func = std::bind(&pros::ADIEncoder::reset, encoder);
-  set_constants(offset, ratio, wheel_size, ticks);
+  set_constants(offset, ratio, wheel_diameter, ticks_per_rotation);
 }
 
 double Tracking_Wheel::get_value() { return get_value_func(); }

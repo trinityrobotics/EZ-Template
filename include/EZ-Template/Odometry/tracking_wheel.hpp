@@ -10,9 +10,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 class Tracking_Wheel {
  public:
-  Tracking_Wheel(pros::Motor motor, double ratio, double wheel_size, double ticks, double offset = 0);
-  Tracking_Wheel(pros::Rotation rotationSensor, double ratio, double wheel_size, double ticks, double offset = 0);
-  Tracking_Wheel(pros::ADIEncoder encoder, double ratio, double wheel_size, double ticks, double offset = 0);
+  Tracking_Wheel(pros::Motor motor, double wheel_diameter, double ticks_per_rotation, double offset = 0, double ratio = 1);
+  Tracking_Wheel(pros::Rotation rotationSensor, double wheel_diameter, double ticks_per_rotation, double offset = 0, double ratio = 1);
+  Tracking_Wheel(pros::ADIEncoder encoder, double wheel_diameter, double ticks_per_rotation, double offset = 0, double ratio = 1);
   double get_value();
   void reset_position();
   double offset;
