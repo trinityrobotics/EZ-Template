@@ -18,6 +18,8 @@ void Drive::ez_auto_task() {
       turn_pid_task();
     else if (get_mode() == SWING)
       swing_pid_task();
+    else if (get_mode() == GO_TO_POINT) 
+      go_to_point_task();
 
     if (pros::competition::is_autonomous() && !util::AUTON_RAN)
       util::AUTON_RAN = true;
@@ -95,4 +97,36 @@ void Drive::swing_pid_task() {
     else if (current_swing == RIGHT_SWING)
       set_tank(0, -swing_out);
   }
+}
+
+// Go To Point Task
+void Drive::go_to_point_task() {
+  // Recalculate targets
+  double hypot = distance_to_point(global_x_target, global_y_target);
+  leftPID.set_target(l_start + (hypot * LEFT_TICK_PER_INCH));
+  rightPID.set_target(r_start + (hypot * RIGHT_TICK_PER_INCH));
+
+  // Compute PID
+  leftPID.compute(left_sensor());
+  rightPID.compute(right_sensor());
+  headingPID.compute(get_gyro());
+
+  // Compute slew
+  double l_slew_out = slew_calculate(left_slew, left_sensor());
+  double r_slew_out = slew_calculate(right_slew, right_sensor());
+
+  // Clip leftPID and rightPID to slew (if slew is disabled, it returns max_speed)
+  double l_drive_out = util::clip_num(leftPID.output + headingPID.output, l_slew_out, -l_slew_out);
+  double r_drive_out = util::clip_num(rightPID.output - headingPID.output, r_slew_out, -r_slew_out);
+
+  // Toggle heading
+  double gyro_out = headingPID.output;
+
+  // Combine heading and drive
+  double l_out = l_drive_out + gyro_out;
+  double r_out = r_drive_out - gyro_out;
+
+  // Set motors
+  if (drive_toggle)
+    set_tank(l_drive_out, r_drive_out);
 }

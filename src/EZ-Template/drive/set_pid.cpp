@@ -111,3 +111,56 @@ void Drive::set_swing_pid(e_swing type, double target, int speed) {
   // Run task
   set_mode(SWING);
 }
+
+// Set drive PID
+void Drive::go_to_point(double x_target, double y_target, int speed, bool slew_on) {
+  LEFT_TICK_PER_INCH = get_tick_per_inch(left_tracker);
+  RIGHT_TICK_PER_INCH = get_tick_per_inch(right_tracker);
+
+  // Global setup
+  set_max_speed(speed);
+  bool is_backwards = false;
+  l_start = left_sensor();
+  r_start = right_sensor();
+  global_x_target = x_target;
+  global_y_target = y_target;
+
+  double l_target_encoder, r_target_encoder;
+
+  // Figure actual target value
+  double target = distance_to_point(x_target, y_target);
+  double heading = angle_to_point(x_target, y_target);
+
+  l_target_encoder = l_start + (target * LEFT_TICK_PER_INCH);
+  r_target_encoder = r_start + (target * RIGHT_TICK_PER_INCH);
+
+  // Print targets
+  if (print_toggle) printf("Drive To Point Started... Target Coordinate: (%.2f, %.2f) (%f L ticks, %f R ticks)", x_target, y_target, target * LEFT_TICK_PER_INCH, target * RIGHT_TICK_PER_INCH);
+  if (slew_on && print_toggle) printf(" with slew");
+  if (print_toggle) printf("\n");
+
+  // Figure out if going forward or backward
+  if (l_target_encoder < l_start && r_target_encoder < r_start) {
+    auto consts = backward_drivePID.get_constants();
+    leftPID.set_constants(consts.kp, consts.ki, consts.kd, consts.start_i);
+    rightPID.set_constants(consts.kp, consts.ki, consts.kd, consts.start_i);
+    is_backwards = true;
+  } else {
+    auto consts = forward_drivePID.get_constants();
+    leftPID.set_constants(consts.kp, consts.ki, consts.kd, consts.start_i);
+    rightPID.set_constants(consts.kp, consts.ki, consts.kd, consts.start_i);
+    is_backwards = false;
+  }
+
+  // Set PID targets
+  leftPID.set_target(l_target_encoder);
+  rightPID.set_target(r_target_encoder);
+  headingPID.set_target(heading);
+
+  // Initialize slew
+  slew_initialize(left_slew, LEFT_TICK_PER_INCH, slew_on, max_speed, l_target_encoder, left_sensor(), l_start, is_backwards);
+  slew_initialize(right_slew, RIGHT_TICK_PER_INCH, slew_on, max_speed, r_target_encoder, right_sensor(), r_start, is_backwards);
+
+  // Run task
+  set_mode(GO_TO_POINT);
+}

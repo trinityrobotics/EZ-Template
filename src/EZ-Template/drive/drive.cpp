@@ -219,8 +219,6 @@ void Drive::set_defaults() {
 double Drive::get_tick_per_inch(Tracking_Wheel* wheel) {
   double circumference = wheel->wheel_size * M_PI;
   double tick_per_rev = wheel->ticks * wheel->ratio;
-
-  printf("dia %f  ticks %f  ratio %f\n", wheel->wheel_size, wheel->ticks, wheel->ratio);
   return (tick_per_rev / circumference);
 }
 

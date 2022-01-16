@@ -8,17 +8,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 using namespace ez;
 
-/// . . .
-// Both of these functions need to handle going backwards too!
-/// . . .
-
 // Finds shortest path to angle
-double Drive::angle_to_point(double x_target, double y_target) {
+double Drive::angle_to_point(double x_target, double y_target, bool is_backwards) {
   // Difference in target to current (legs of triangle)
   double x_error = x_target - x_pos;
   double y_error = y_target - y_pos;
 
-  // Sign of legs
+  // Sign of legs (makes them TRUE if positive, and FALSE if negative)
   int x_sgn = util::sgn(x_error);
   int y_sgn = util::sgn(y_error);
 
@@ -39,6 +35,14 @@ double Drive::angle_to_point(double x_target, double y_target) {
 
   // Angle bound to 0 to 360
   double angle_bound_360 = util::to_deg(atan(fabs(y_error) / fabs(x_error))) + add_for_quadrant;
+
+  // When facing backwards, flip target angle by 180
+  if (is_backwards) {
+    if (angle_bound_360 > 180)
+      angle_bound_360 -= 180;
+    else
+      angle_bound_360 += 180;
+  }
 
   // add something to handle encoders later
   // needs to handle greater then 720
@@ -61,13 +65,18 @@ double Drive::angle_to_point(double x_target, double y_target) {
   return output;
 }
 
-// Distance to point
-double Drive::distance_to_point(double x_target, double y_target) {
-  // Difference in target to current (legs of traignel)
-  double x_error = x_target - x_pos;
-  double y_error = y_target - y_pos;
+// Find shortest distance to point
+double Drive::distance_to_point(double x_target, double y_target, bool is_backwards) {
+  // Difference in target to current (legs of triangle)
+  double x_error = fabs(x_target - x_pos);
+  double y_error = fabs(y_target - y_pos);
 
-  double distance = util::hypot(x_error, y_error);
+  // Makes the distance negative if going backwards
+  int sgn = is_backwards ? -1 : 1;
 
+  // Hypotenuse of triangle (the distance we have to travel)
+  double distance = util::hypot(x_error, y_error) * sgn;
+
+  // printf("Distance: %f\n", distance);
   return distance;
 }
