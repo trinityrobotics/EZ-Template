@@ -108,6 +108,21 @@ bool is_reversed(double input);
 double clip_num(double input, double max, double min);
 
 /**
+ * Returns length of hypotenuse. 
+ */
+double hypot(double a, double b);
+
+/**
+ * Returns rad of an input deg.  
+ */
+double to_rad(double deg);
+
+/**
+ * Returns deg of an input rad.
+ */
+double to_deg(double rad);
+
+/**
  * Is the SD card plugged in?
  */
 const bool IS_SD_CARD = pros::usd::is_installed();
