@@ -31,13 +31,14 @@ void Drive::tracking_task() {
   double beta = 0, alpha = 0, theta = 0;
   double x = 0, y = 0;
   while (true) {
-    // l_current = LEFT_TICK_PER_INCH != 0 ? left_sensor() / LEFT_TICK_PER_INCH : 0;
-    // r_current = RIGHT_TICK_PER_INCH != 0 ? right_sensor() / RIGHT_TICK_PER_INCH : 0;
     l_current = left_sensor() / LEFT_TICK_PER_INCH;
     r_current = right_sensor() / RIGHT_TICK_PER_INCH;
 
     l = l_current - l_last;
     r = r_current - r_last;
+
+    l_last = l_current;
+    r_last = r_current;
 
     double width = left_tracker->offset + right_tracker->offset;
 
@@ -60,8 +61,6 @@ void Drive::tracking_task() {
     x_pos += x;
     y_pos += y;
     angle += theta;
-
-    printf("X: %f  Y: %f  A: %f\n", x_pos, y_pos, angle);
 
     if (!(selected_constructor != TRACKING_THREE_WHEEL_IMU || selected_constructor != TRACKING_THREE_WHEEL_NO_IMU || selected_constructor != TRACKING_TWO_WHEEL_IMU || selected_constructor != TRACKING_TWO_WHEEL_NO_IMU))
       tracking.suspend();
