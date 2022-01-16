@@ -195,7 +195,7 @@ class Drive {
    * \param imu_port
    *        Port the IMU is plugged into.
    */
-  Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports, Tracking_Wheel left_tracker, Tracking_Wheel right_tracker, Tracking_Wheel center_tracker, int imu_port = -1);
+  Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports, Tracking_Wheel* left_tracker, Tracking_Wheel* right_tracker, Tracking_Wheel* center_tracker, int imu_port = -1);
 
   /**
    * Creates a Drive Controller using two tracking wheels.
@@ -211,7 +211,7 @@ class Drive {
    * \param imu_port
    *        Port the IMU is plugged into.
    */
-  Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports, Tracking_Wheel left_tracker, Tracking_Wheel right_tracker, int imu_port = -1);
+  Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports, Tracking_Wheel* left_tracker, Tracking_Wheel* right_tracker, int imu_port = -1);
 
   /**
    * Sets drive defaults.
@@ -714,10 +714,11 @@ class Drive {
    */
   double slew_calculate(slew_& input, double current);
 
-  double x_pos = 0;
-  double y_pos = 0;
-  double theta = 0;
-  void tracking();
+  double x_pos;
+  double y_pos;
+  double angle;
+  void tracking_task();
+  pros::Task tracking;
   void reset_odom();
   void set_x(double x);
   void set_y(double y);
@@ -745,10 +746,9 @@ class Drive {
   /**
    * Tick per inch calculation.
    */
-  double TICK_PER_REV;
-  double LEFT_TICK_PER_INCH;
-  double RIGHT_TICK_PER_INCH;
-  double CIRCUMFERENCE;
+  double LEFT_TICK_PER_INCH = 0;
+  double RIGHT_TICK_PER_INCH = 0;
+  double CENTER_TICK_PER_INCH = 0;
 
   /**
    * Max speed for autonomous.
@@ -785,14 +785,10 @@ class Drive {
    */
   bool is_tank;
 
-#define DRIVE_INTEGRATED 1
-#define DRIVE_ADI_ENCODER 2
-#define DRIVE_ROTATION 3
-
   /**
    * Is tracking?
    */
-  int is_tracker = DRIVE_INTEGRATED;
+  e_drive_type selected_constructor;
 
   /**
    * Save input to sd card

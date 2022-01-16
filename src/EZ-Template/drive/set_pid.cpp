@@ -25,9 +25,7 @@ void Drive::set_angle(double angle) {
   reset_gyro(angle);
 }
 
-void Drive::set_mode(e_mode p_mode) {
-  mode = p_mode;
-}
+void Drive::set_mode(e_mode p_mode) { mode = p_mode; }
 
 void Drive::set_turn_min(int min) { turn_min = abs(min); }
 int Drive::get_turn_min() { return turn_min; }
@@ -41,7 +39,7 @@ e_mode Drive::get_mode() { return mode; }
 void Drive::set_drive_pid(double target, int speed, bool slew_on, bool toggle_heading) {
   LEFT_TICK_PER_INCH = get_tick_per_inch(left_tracker);
   RIGHT_TICK_PER_INCH = get_tick_per_inch(right_tracker);
-  // Print targets
+  //  Print targets
   if (print_toggle) printf("Drive Started... Target Value: %f (%f L ticks, %f R ticks)", target, target * LEFT_TICK_PER_INCH, target * RIGHT_TICK_PER_INCH);
   if (slew_on && print_toggle) printf(" with slew");
   if (print_toggle) printf("\n");

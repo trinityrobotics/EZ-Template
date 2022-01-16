@@ -1,10 +1,11 @@
 #include "main.h"
 #include "EZ-Template/Odometry/tracking_wheel.hpp"
+#include "pros/adi.hpp"
 #include "pros/motors.hpp"
 
+Tracking_Wheel left_p  {pros::Motor(15,true),  2.5, 600, 4};
+Tracking_Wheel right_p {pros::Motor(6), 2.5, 600, 4};
 
-//Tracking_Wheel left_p  {chassis.left_motors[0],  2.5, 600};
-//Tracking_Wheel right_p {chassis.right_motors[0], 2.5, 600};
 
 // Chassis constructor
 Drive chassis (
@@ -15,10 +16,10 @@ Drive chassis (
   ,{6, 5}
 
   // Left Tracker
-  ,Tracking_Wheel{pros::Motor(15,true),  2.5, 600}
+  ,&left_p
 
   // Right Tracker
-  ,Tracking_Wheel{pros::Motor(6),  2.5, 600}
+  ,&right_p
 
   ,20
 );
@@ -57,12 +58,6 @@ void initialize() {
     Auton("Combine all 3 movements", combining_movements),
     Auton("Interference\n\nAfter driving forward, robot performs differently if interfered or not.", interfered_example),
   });
-
-  //chassis.reset_drive_sensor();
-  chassis.left_tracker->reset_position();
-  while (true) {
-    pros::delay(ez::util::DELAY_TIME);
-  }
 
   // Initialize chassis and auton selector
   chassis.initialize();
@@ -135,10 +130,12 @@ void autonomous() {
 void opcontrol() {
   // This is preference to what you like to drive on.
   chassis.set_drive_brake(MOTOR_BRAKE_COAST);
+  
+  chassis.reset_odom();
 
   while (true) {
 
-    chassis.tank(); // Tank control
+    // chassis.tank(); // Tank control
     // chassis.arcade_standard(ez::SPLIT); // Standard split arcade
     // chassis.arcade_standard(ez::SINGLE); // Standard single arcade
     // chassis.arcade_flipped(ez::SPLIT); // Flipped split arcade

@@ -72,6 +72,18 @@ enum e_mode { DISABLE = 0,
               DRIVE = 3 };
 
 /**
+ * Enum drive constructor type
+ */
+enum e_drive_type { ADI_ENCODER = 0,
+                    ADI_ENCODER_EXPANDER = 1,
+                    ROTATION = 2,
+                    INTEGRATED = 3,
+                    TRACKING_TWO_WHEEL_IMU = 4,
+                    TRACKING_TWO_WHEEL_NO_IMU = 5,
+                    TRACKING_THREE_WHEEL_IMU = 6,
+                    TRACKING_THREE_WHEEL_NO_IMU = 7 };
+
+/**
  * Outputs string for exit_condition enum.
  */
 std::string exit_to_string(exit_output input);
