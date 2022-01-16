@@ -25,23 +25,28 @@ void Drive::reset_odom() {
 
 void Drive::tracking_task() {
   double l_current = 0, r_current = 0;
-  double l, r;
-  double l_last = 0, r_last = 0;
-  double radius_l = 0, h = 0;
+  double c_current = 0;
+  double l = 0, r = 0, c = 0;  // delta distance
+  double l_last = 0, r_last = 0, c_last = 0;
+  double radius_l = 0, h = 0;  // rad for big circle
   double beta = 0, alpha = 0, theta = 0;
   double x = 0, y = 0;
   while (true) {
     l_current = left_sensor() / LEFT_TICK_PER_INCH;
     r_current = right_sensor() / RIGHT_TICK_PER_INCH;
+    // c_current = center_tracker->get_value() / CENTER_TICK_PER_INCH;
 
     l = l_current - l_last;
     r = r_current - r_last;
+    // c = c_current - c_last;
 
     l_last = l_current;
     r_last = r_current;
+    // c_last = c_current;
 
     double width = left_tracker->offset + right_tracker->offset;
 
+    // diff between wheels for correcting turning
     theta = (l - r) / width;
 
     if (theta != 0) {

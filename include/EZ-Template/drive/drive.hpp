@@ -726,6 +726,7 @@ class Drive {
   Tracking_Wheel* left_tracker;
   Tracking_Wheel* right_tracker;
   Tracking_Wheel* center_tracker;
+  double turn_to_point(double x_target, double y_target);
 
  private:  // !Auton
   bool drive_toggle = true;

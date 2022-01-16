@@ -1,11 +1,7 @@
 #include "main.h"
-#include "EZ-Template/Odometry/tracking_wheel.hpp"
-#include "pros/adi.hpp"
-#include "pros/motors.hpp"
 
 Tracking_Wheel left_p  {pros::Motor(15,true),  2.5, 600, 4};
 Tracking_Wheel right_p {pros::Motor(6), 2.5, 600, 4};
-
 
 // Chassis constructor
 Drive chassis (

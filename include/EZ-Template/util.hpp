@@ -69,7 +69,8 @@ enum exit_output { RUNNING = 1,
 enum e_mode { DISABLE = 0,
               SWING = 1,
               TURN = 2,
-              DRIVE = 3 };
+              DRIVE = 3,
+              GO_TO_POINT = 4 };
 
 /**
  * Enum drive constructor type

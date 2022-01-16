@@ -51,7 +51,7 @@ void Drive::drive_pid_task() {
   double r_out = r_drive_out - gyro_out;
 
   // Set motors
-  if (drive_toggle) 
+  if (drive_toggle)
     set_tank(l_out, r_out);
 }
 
