@@ -74,7 +74,6 @@ void Drive::turn_pid_task() {
   // Set motors
   if (drive_toggle)
     set_tank(gyro_out, -gyro_out);
-  printf("Current (%.2f, %.2f)    Target (%.2f, %.2f)\n", x_pos, y_pos, global_x_target, global_y_target);
 }
 
 // Swing PID task
@@ -102,10 +101,10 @@ void Drive::swing_pid_task() {
 
 // Go To Point Task
 void Drive::go_to_point_task() {
-  // Recalculate targets
+  // Distance error
   double hypot = distance_to_point(global_x_target, global_y_target, current_direction);
-  // pose angle_target = vector_off_point(3, angle_to_point(global_x_target, global_y_target), global_x_target, global_y_target);
-  // double angle = angle_to_point(angle_target.x, angle_target.y);
+
+  // When within some value of target, stop updating the angle.  This prevents the robot from spinning at the end of the motion.
   double angle;
   if (abs(hypot) < 3) {
     angle = settled_angle;
@@ -114,19 +113,15 @@ void Drive::go_to_point_task() {
     settled_angle = angle;
   }
 
-  // pose angle_target = vector_off_point(3, get_gyro(), global_x_target, global_y_target);
-  // double angle = angle_to_point(angle_target.x, angle_target.y);
-  double x_error = global_x_target - x_pos;
-  double y_error = global_y_target - y_pos;
-  // double hypot = x_error / sin(angle);            // sin =  oh
-  leftPID.set_target((hypot * LEFT_TICK_PER_INCH));  // 10 - 2 = -2
+  // Update targets
+  leftPID.set_target((hypot * LEFT_TICK_PER_INCH));
   rightPID.set_target((hypot * RIGHT_TICK_PER_INCH));
   headingPID.set_target(angle);
 
-  // Compute PID
+  // Compute PID, the currents are 0 because the targets are the displacement
   leftPID.compute(0);
   rightPID.compute(0);
-  headingPID.compute(get_gyro());
+  headingPID.compute(0);
 
   // Compute slew
   double l_slew_out = slew_calculate(left_slew, left_sensor());
@@ -142,10 +137,8 @@ void Drive::go_to_point_task() {
   // Combine heading and drive
   double l_out = l_drive_out + gyro_out;
   double r_out = r_drive_out - gyro_out;
-  // printf("angle_deg%f\n", angle_deg);
 
-  // printf("L %f  R %f  G %f    x%i y%i\n", leftPID.error/LEFT_TICK_PER_INCH, rightPID.error/RIGHT_TICK_PER_INCH, headingPID.error, util::sgn(global_x_target-x_pos), util::sgn(global_y_target-y_pos));
-  printf("Current (%.2f, %.2f)    Target (%.2f, %.2f)   Angle Target %.2f\n", x_pos, y_pos, global_x_target, global_y_target, angle);
+  // printf("Current (%.2f, %.2f)    Target (%.2f, %.2f)   Angle Error %.2f\n", x_pos, y_pos, global_x_target, global_y_target, headingPID.error);
 
   // Set motors
   if (drive_toggle)

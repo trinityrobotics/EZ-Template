@@ -60,6 +60,13 @@ class Drive {
   pros::Imu imu;
 
   /**
+   * Sensored wheels. 
+   */
+  Tracking_Wheel* left_tracker;
+  Tracking_Wheel* right_tracker;
+  Tracking_Wheel* center_tracker;
+
+  /**
    * PID objects.
    */
   PID headingPID;
@@ -713,32 +720,39 @@ class Drive {
    *        current sensor value
    */
   double slew_calculate(slew_& input, double current);
-  
+
+  /////
+  //
+  // Odometry 
+  //
+  /////
+
   double x_pos = 0;
   double y_pos = 0;
   double angle_deg;
   double angle_rad = 0;
   double settled_angle = 0;
-  int x_error_sgn, y_error_sgn;
-  bool is_reversing = false;
-  void tracking_task();
-  pros::Task tracking;
+  
   void reset_odom();
   void set_x(double x);
   void set_y(double y);
   void set_theta(double a);
-  Tracking_Wheel* left_tracker;
-  Tracking_Wheel* right_tracker;
-  Tracking_Wheel* center_tracker;
-  double angle_to_point(double x_target, double y_target, bool is_backwards = false);
-  double distance_to_point(double x_target, double y_target, bool is_backwards = false);
-  void go_to_point(bool direction, double x, double y, int speed, bool slew_on = false);
+  
+  double angle_to_point(double x_target, double y_target, e_direction direction = FWD);
+  double distance_to_point(double x_target, double y_target, e_direction direction = FWD);
+  void go_to_point(e_direction direction, double x_target, double y_target, int speed, bool slew_on = false);
   double global_x_target = 0, global_y_target = 0;
-  void go_to_point_task();
-  pose vector_off_point(double added, double theta, double x_target, double y_target, bool is_backwards = false);
-  bool current_direction;
-
+  
+  pose vector_off_point(double added, double theta, double x_target, double y_target, e_direction direction);
+  
  private:  // !Auton
+ e_direction current_direction;
+ int x_error_sgn, y_error_sgn;
+ //bool is_reversing = false;
+  void tracking_task();
+  void go_to_point_task();
+  pros::Task tracking;
+
   bool drive_toggle = true;
   bool print_toggle = true;
   int swing_min = 0;

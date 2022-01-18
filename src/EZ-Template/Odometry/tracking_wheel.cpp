@@ -25,7 +25,7 @@ Tracking_Wheel::Tracking_Wheel(pros::ADIEncoder encoder, double wheel_diameter, 
 }
 
 double Tracking_Wheel::get_value() {
-  if (pros::millis() < 1500) return 0;
+  if (pros::millis() < 500) return 0;
   return get_value_func();
 }
 

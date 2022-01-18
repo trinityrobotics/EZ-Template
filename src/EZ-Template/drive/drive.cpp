@@ -227,7 +227,7 @@ void Drive::set_pid_constants(PID* pid, double p, double i, double d, double p_s
 }
 
 void Drive::set_tank(int left, int right) {
-  if (pros::millis() < 1500) return;
+  if (pros::millis() < 500) return;
 
   for (auto i : left_motors) {
     if (!pto_check(i)) i.move_voltage(left * (12000.0 / 127.0));  // If the motor is in the pto list, don't do anything to the motor.
@@ -342,9 +342,10 @@ void Drive::initialize() {
   reset_drive_sensor();
   reset_odom();
   init_curve_sd();
-  if (selected_constructor != TRACKING_THREE_WHEEL_NO_IMU || selected_constructor != TRACKING_TWO_WHEEL_NO_IMU) {
+  if (selected_constructor != TRACKING_THREE_WHEEL_NO_IMU && selected_constructor != TRACKING_TWO_WHEEL_NO_IMU)
     imu_calibrate();
-  }
+  else
+    master.rumble(".");
 }
 
 void Drive::toggle_auto_drive(bool toggle) { drive_toggle = toggle; }

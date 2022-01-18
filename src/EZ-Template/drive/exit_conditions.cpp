@@ -30,7 +30,7 @@ void Drive::wait_drive() {
   // Let the PID run at least 1 iteration
   pros::delay(util::DELAY_TIME);
 
-  if (mode == DRIVE) {
+  if (get_mode() == DRIVE || get_mode() == GO_TO_POINT) {
     exit_output left_exit = RUNNING;
     exit_output right_exit = RUNNING;
     while (left_exit == RUNNING || right_exit == RUNNING) {
@@ -46,7 +46,7 @@ void Drive::wait_drive() {
   }
 
   // Turn Exit
-  else if (mode == TURN) {
+  else if (get_mode() == TURN) {
     exit_output turn_exit = RUNNING;
     while (turn_exit == RUNNING) {
       turn_exit = turn_exit != RUNNING ? turn_exit : turnPID.exit_condition({left_motors[0], right_motors[0]});
@@ -60,7 +60,7 @@ void Drive::wait_drive() {
   }
 
   // Swing Exit
-  else if (mode == SWING) {
+  else if (get_mode() == SWING) {
     exit_output swing_exit = RUNNING;
     pros::Motor& sensor = current_swing == ez::LEFT_SWING ? left_motors[0] : right_motors[0];
     while (swing_exit == RUNNING) {
@@ -78,7 +78,7 @@ void Drive::wait_drive() {
 // Function to wait until a certain position is reached.  Wrapper for exit condition.
 void Drive::wait_until(double target) {
   // If robot is driving...
-  if (mode == DRIVE) {
+  if (get_mode() == DRIVE) {
     // Calculate error between current and target (target needs to be an in between position)
     LEFT_TICK_PER_INCH = get_tick_per_inch(left_tracker);
     RIGHT_TICK_PER_INCH = get_tick_per_inch(right_tracker);
@@ -122,7 +122,7 @@ void Drive::wait_until(double target) {
   }
 
   // If robot is turning or swinging...
-  else if (mode == TURN || mode == SWING) {
+  else if (get_mode() == TURN || get_mode() == SWING) {
     // Calculate error between current and target (target needs to be an in between position)
     int g_error = target - get_gyro();
     int g_sgn = util::sgn(g_error);
@@ -136,7 +136,7 @@ void Drive::wait_until(double target) {
       g_error = target - get_gyro();
 
       // If turning...
-      if (mode == TURN) {
+      if (get_mode() == TURN) {
         // Before robot has reached target, use the exit conditions to avoid getting stuck in this while loop
         if (util::sgn(g_error) == g_sgn) {
           if (turn_exit == RUNNING) {

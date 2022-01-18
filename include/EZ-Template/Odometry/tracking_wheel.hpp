@@ -19,6 +19,7 @@ class Tracking_Wheel {
   double ratio;
   double wheel_size;
   double ticks;
+
  private:
   void set_constants(double offset, double ratio, double wheel_size, double ticks);
   std::function<double()> get_value_func;

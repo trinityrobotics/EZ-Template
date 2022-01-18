@@ -4,6 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
+#include "EZ-Template/util.hpp"
 #include "main.h"
 
 // Updates max speed
@@ -112,8 +113,8 @@ void Drive::set_swing_pid(e_swing type, double target, int speed) {
   set_mode(SWING);
 }
 
-// Set drive PID
-void Drive::go_to_point(bool direction, double x_target, double y_target, int speed, bool slew_on) {
+// Set drive PID using odom :o
+void Drive::go_to_point(e_direction direction, double x_target, double y_target, int speed, bool slew_on) {
   LEFT_TICK_PER_INCH = get_tick_per_inch(left_tracker);
   RIGHT_TICK_PER_INCH = get_tick_per_inch(right_tracker);
 
@@ -125,18 +126,18 @@ void Drive::go_to_point(bool direction, double x_target, double y_target, int sp
   global_x_target = x_target;
   global_y_target = y_target;
   current_direction = direction;
+  double l_target_encoder = 0, r_target_encoder = 0;
 
+  // Legs of triangle
   x_error_sgn = util::sgn(global_x_target - x_pos);
   y_error_sgn = util::sgn(global_y_target - y_pos);
-
-  double l_target_encoder = 0, r_target_encoder = 0;
 
   // Figure actual target value
   double target = distance_to_point(x_target, y_target, direction);
   double heading = angle_to_point(x_target, y_target, direction);
 
-  l_target_encoder = l_start + (target * LEFT_TICK_PER_INCH);
-  r_target_encoder = r_start + (target * RIGHT_TICK_PER_INCH);
+  l_target_encoder = target * LEFT_TICK_PER_INCH;
+  r_target_encoder = target * RIGHT_TICK_PER_INCH;
 
   // Print targets
   if (print_toggle) printf("Drive To Point Started... Target Coordinate: (%.2f, %.2f) (%f L ticks, %f R ticks)", x_target, y_target, target * LEFT_TICK_PER_INCH, target * RIGHT_TICK_PER_INCH);
@@ -144,12 +145,12 @@ void Drive::go_to_point(bool direction, double x_target, double y_target, int sp
   if (print_toggle) printf("\n");
 
   // Figure out if going forward or backward
-  if (l_target_encoder < l_start && r_target_encoder < r_start) {
+  if (direction == true) {
     auto consts = backward_drivePID.get_constants();
     leftPID.set_constants(consts.kp, consts.ki, consts.kd, consts.start_i);
     rightPID.set_constants(consts.kp, consts.ki, consts.kd, consts.start_i);
     is_backwards = true;
-  } else {
+  } else if (direction == false) {
     auto consts = forward_drivePID.get_constants();
     leftPID.set_constants(consts.kp, consts.ki, consts.kd, consts.start_i);
     rightPID.set_constants(consts.kp, consts.ki, consts.kd, consts.start_i);

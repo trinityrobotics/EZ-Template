@@ -85,6 +85,14 @@ enum e_drive_type { ADI_ENCODER = 0,
                     TRACKING_THREE_WHEEL_NO_IMU = 7 };
 
 /**
+ * Enum for direction, used in odom. 
+ */
+enum e_direction { FWD = 0,
+                   FORWARD = 0,
+                   REV = 1,
+                   REVERSE = 1 };
+
+/**
  * Struct for coordinates
  */
 typedef struct pose {
@@ -132,7 +140,7 @@ double to_rad(double deg);
 double to_deg(double rad);
 
 /**
- * Constrains angle to 180 to -180
+ * Constrains angle to 180 to -180, input in deg. 
  */
 double wrap_angle(double theta);
 
