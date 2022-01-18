@@ -1,8 +1,40 @@
 #include "main.h"
 
-Tracking_Wheel left_p  {pros::Motor(15,true),  2.5, 600, 4};
-Tracking_Wheel right_p {pros::Motor(6), 2.5, 600, 4};
+/*
+Tracking_Wheel left_p  {pros::Motor(7,true),  4.125, 600, 7.0625, 1.875};
+Tracking_Wheel right_p {pros::Motor(4), 4.125, 600, 7.0625, 1.875};
+// Chassis constructor
+Drive chassis (
+  {-7, -8, 9},{4, 3, -2}
 
+  // Left Tracker
+  ,&left_p
+
+  // Right Tracker
+  ,&right_p
+
+  ,11
+);
+
+
+double width = 12.75;
+Tracking_Wheel left_p  {pros::Motor(11,true),  3.25, 600, width/2, 1.6667};
+Tracking_Wheel right_p {pros::Motor(2), 3.25, 600, width/2, 1.6667};
+// Chassis constructor
+Drive chassis (
+  {-11, -5, -7},{2, 3, 17}
+
+  // Left Tracker
+  ,&left_p
+
+  // Right Tracker
+  ,&right_p
+);
+
+*/
+
+Tracking_Wheel left_p  {pros::Motor(15,true),  2.5, 600, 5.5};
+Tracking_Wheel right_p {pros::Motor(6), 2.5, 600, 5.5};
 // Chassis constructor
 Drive chassis (
   // Left Chassis Ports (negative port will reverse it!)
@@ -19,8 +51,6 @@ Drive chassis (
 
   ,20
 );
-
-
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -58,6 +88,11 @@ void initialize() {
   // Initialize chassis and auton selector
   chassis.initialize();
   ez::as::initialize();
+
+  //while (true) {
+  //  printf("Fwd: %.2f   Rev %.2f\n", chassis.angle_to_point(0, 12), chassis.angle_to_point(0, 12, true));
+  //  pros::delay(ez::util::DELAY_TIME);
+ // }
 }
 
 
@@ -103,9 +138,32 @@ void autonomous() {
   chassis.reset_pid_targets(); // Resets PID targets to 0
   chassis.reset_gyro(); // Reset gyro position to 0
   chassis.reset_drive_sensor(); // Reset drive sensors to 0
+  chassis.reset_odom(); // Resets x, y and angle to 0
   chassis.set_drive_brake(MOTOR_BRAKE_HOLD); // Set motors to hold.  This helps autonomous consistency.
 
-  ez::as::auton_selector.call_selected_auton(); // Calls selected auton from autonomous selector.
+  //chassis.toggle_auto_drive(false);
+
+  //chassis.set_turn_pid(720, 90);
+  //chassis.wait_drive();
+
+  //chassis.set_turn_pid(chassis.angle_to_point(12, 12), 40);
+  //chassis.wait_drive();
+
+  //chassis.set_theta(45);
+  //chassis.set_theta(180);
+  chassis.go_to_point(false, 12, 12, 20);
+  //pros::delay(3000);
+  //chassis.go_to_point(true, 12, 24, 20);
+  /*
+  pros::delay(3000);
+  chassis.go_to_point(false, 0, 0, 110);
+  pros::delay(3000);
+  */
+
+  //chassis.set_turn_pid(chassis.angle_to_point(-12, 12), 40);
+  //chassis.wait_drive();
+
+  //ez::as::auton_selector.call_selected_auton(); // Calls selected auton from autonomous selector.
 }
 
 
@@ -126,8 +184,6 @@ void autonomous() {
 void opcontrol() {
   // This is preference to what you like to drive on.
   chassis.set_drive_brake(MOTOR_BRAKE_COAST);
-  
-  chassis.reset_odom();
 
   while (true) {
 

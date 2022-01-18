@@ -158,5 +158,11 @@ double to_deg(double rad) {
   return rad * (180 / M_PI);
 }
 
+double wrap_angle(double theta) {
+  while (theta > 180) theta -= 360;
+  while (theta < -180) theta += 360;
+  return theta;
+}
+
 }  // namespace util
 }  // namespace ez

@@ -267,7 +267,10 @@ double Drive::left_mA() { return left_motors[0].get_current_draw(); }
 bool Drive::left_over_current() { return left_motors[0].is_over_current(); }
 
 void Drive::reset_gyro(double new_heading) { imu.set_rotation(new_heading); }
-double Drive::get_gyro() { return imu.get_rotation(); }
+double Drive::get_gyro() {
+  // return imu.get_rotation();
+  return angle_deg;
+}
 
 void Drive::imu_loading_display(int iter) {
   // If the lcd is already initialized, don't run this function
@@ -336,9 +339,12 @@ void Drive::set_drive_brake(pros::motor_brake_mode_e_t brake_type) {
 }
 
 void Drive::initialize() {
-  init_curve_sd();
-  imu_calibrate();
   reset_drive_sensor();
+  reset_odom();
+  init_curve_sd();
+  if (selected_constructor != TRACKING_THREE_WHEEL_NO_IMU || selected_constructor != TRACKING_TWO_WHEEL_NO_IMU) {
+    imu_calibrate();
+  }
 }
 
 void Drive::toggle_auto_drive(bool toggle) { drive_toggle = toggle; }

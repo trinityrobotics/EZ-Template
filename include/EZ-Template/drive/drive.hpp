@@ -713,10 +713,14 @@ class Drive {
    *        current sensor value
    */
   double slew_calculate(slew_& input, double current);
-
-  double x_pos;
-  double y_pos;
-  double angle;
+  
+  double x_pos = 0;
+  double y_pos = 0;
+  double angle_deg;
+  double angle_rad = 0;
+  double settled_angle = 0;
+  int x_error_sgn, y_error_sgn;
+  bool is_reversing = false;
   void tracking_task();
   pros::Task tracking;
   void reset_odom();
@@ -728,9 +732,11 @@ class Drive {
   Tracking_Wheel* center_tracker;
   double angle_to_point(double x_target, double y_target, bool is_backwards = false);
   double distance_to_point(double x_target, double y_target, bool is_backwards = false);
-  void go_to_point(double x, double y, int speed, bool slew_on = false);
+  void go_to_point(bool direction, double x, double y, int speed, bool slew_on = false);
   double global_x_target = 0, global_y_target = 0;
   void go_to_point_task();
+  pose vector_off_point(double added, double theta, double x_target, double y_target, bool is_backwards = false);
+  bool current_direction;
 
  private:  // !Auton
   bool drive_toggle = true;

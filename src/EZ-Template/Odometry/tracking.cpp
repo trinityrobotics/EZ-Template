@@ -14,7 +14,8 @@ void Drive::set_y(double y) { y_pos = y; }
 
 void Drive::set_theta(double a) {
   reset_gyro(a);
-  angle = a;
+  angle_rad = util::to_rad(a);
+  angle_deg = a;
 }
 
 void Drive::reset_odom() {
@@ -28,13 +29,17 @@ void Drive::tracking_task() {
   double c_current = 0;
   double l = 0, r = 0, c = 0;  // delta distance
   double l_last = 0, r_last = 0, c_last = 0;
-  double radius_l = 0, radiusC = 0, h = 0, h2 = 0;  // rad for big circle
+  double radius_r = 0, radius_c = 0, h = 0, h2 = 0;  // rad for big circle
   double beta = 0, alpha = 0, theta = 0;
   double Xx = 0, Yy = 0, Xy = 0, Yx = 0;
+  bool is_three = false;
   while (true) {
+    if (selected_constructor == ez::TRACKING_THREE_WHEEL_IMU || selected_constructor == ez::TRACKING_THREE_WHEEL_NO_IMU)
+      is_three = true;
+
     l_current = left_sensor() / LEFT_TICK_PER_INCH;
     r_current = right_sensor() / RIGHT_TICK_PER_INCH;
-    c_current = center_tracker->get_value() / CENTER_TICK_PER_INCH;
+    if (is_three) c_current = center_tracker->get_value() / CENTER_TICK_PER_INCH;
 
     l = l_current - l_last;
     r = r_current - r_last;
@@ -45,20 +50,17 @@ void Drive::tracking_task() {
     c_last = c_current;
 
     double width = left_tracker->offset + right_tracker->offset;
-    double c_offset = center_tracker ->offset;
 
     // diff between wheels for correcting turning
     theta = (l - r) / width;
 
-
-	 
     if (theta != 0) {
-      radius_l = l / theta;
+      radius_r = r / theta;
       beta = theta / 2.0;
-      h = ((radius_l + (width / 2.0)) * sin(beta)) * 2.0;
-      if(selected_constructor == ez::TRACKING_THREE_WHEEL_IMU ||selected_constructor == ez::TRACKING_THREE_WHEEL_NO_IMU){
-      radiusC = c / theta;
-      h2 = (radiusC + c_offset) * 2 *sin(beta); 
+      h = ((radius_r + right_tracker->offset) * sin(beta)) * 2.0;
+      if (is_three) {
+        radius_c = c / theta;
+        h2 = (radius_c + center_tracker->offset) * 2 * sin(beta);
       }
     } else {
       h = l;
@@ -66,11 +68,8 @@ void Drive::tracking_task() {
       beta = 0;
     }
 
-    
+    alpha = angle_rad + beta;
 
-
-    alpha = angle + beta;
-    
     Xx = h2 * cos(alpha);
     Xy = h2 * -sin(alpha);
     Yx = h * sin(alpha);
@@ -78,10 +77,11 @@ void Drive::tracking_task() {
 
     x_pos += Xx + Yx;
     y_pos += Xy + Yy;
-    angle += theta;
+    angle_rad += theta;
+    angle_deg = util::to_deg(angle_rad);
 
-    // if (!(selected_constructor != TRACKING_THREE_WHEEL_IMU || selected_constructor != TRACKING_THREE_WHEEL_NO_IMU || selected_constructor != TRACKING_TWO_WHEEL_IMU || selected_constructor != TRACKING_TWO_WHEEL_NO_IMU))
-    //   tracking.suspend();
+    if (!(selected_constructor != TRACKING_THREE_WHEEL_IMU || selected_constructor != TRACKING_THREE_WHEEL_NO_IMU || selected_constructor != TRACKING_TWO_WHEEL_IMU || selected_constructor != TRACKING_TWO_WHEEL_NO_IMU))
+      tracking.suspend();
 
     pros::delay(1);
   }

@@ -18,7 +18,7 @@ void Drive::ez_auto_task() {
       turn_pid_task();
     else if (get_mode() == SWING)
       swing_pid_task();
-    else if (get_mode() == GO_TO_POINT) 
+    else if (get_mode() == GO_TO_POINT)
       go_to_point_task();
 
     if (pros::competition::is_autonomous() && !util::AUTON_RAN)
@@ -74,6 +74,7 @@ void Drive::turn_pid_task() {
   // Set motors
   if (drive_toggle)
     set_tank(gyro_out, -gyro_out);
+  printf("Current (%.2f, %.2f)    Target (%.2f, %.2f)\n", x_pos, y_pos, global_x_target, global_y_target);
 }
 
 // Swing PID task
@@ -102,13 +103,29 @@ void Drive::swing_pid_task() {
 // Go To Point Task
 void Drive::go_to_point_task() {
   // Recalculate targets
-  double hypot = distance_to_point(global_x_target, global_y_target);
-  leftPID.set_target(l_start + (hypot * LEFT_TICK_PER_INCH));
-  rightPID.set_target(r_start + (hypot * RIGHT_TICK_PER_INCH));
+  double hypot = distance_to_point(global_x_target, global_y_target, current_direction);
+  // pose angle_target = vector_off_point(3, angle_to_point(global_x_target, global_y_target), global_x_target, global_y_target);
+  // double angle = angle_to_point(angle_target.x, angle_target.y);
+  double angle;
+  if (abs(hypot) < 3) {
+    angle = settled_angle;
+  } else {
+    angle = angle_to_point(global_x_target, global_y_target, current_direction);
+    settled_angle = angle;
+  }
+
+  // pose angle_target = vector_off_point(3, get_gyro(), global_x_target, global_y_target);
+  // double angle = angle_to_point(angle_target.x, angle_target.y);
+  double x_error = global_x_target - x_pos;
+  double y_error = global_y_target - y_pos;
+  // double hypot = x_error / sin(angle);            // sin =  oh
+  leftPID.set_target((hypot * LEFT_TICK_PER_INCH));  // 10 - 2 = -2
+  rightPID.set_target((hypot * RIGHT_TICK_PER_INCH));
+  headingPID.set_target(angle);
 
   // Compute PID
-  leftPID.compute(left_sensor());
-  rightPID.compute(right_sensor());
+  leftPID.compute(0);
+  rightPID.compute(0);
   headingPID.compute(get_gyro());
 
   // Compute slew
@@ -116,17 +133,21 @@ void Drive::go_to_point_task() {
   double r_slew_out = slew_calculate(right_slew, right_sensor());
 
   // Clip leftPID and rightPID to slew (if slew is disabled, it returns max_speed)
-  double l_drive_out = util::clip_num(leftPID.output + headingPID.output, l_slew_out, -l_slew_out);
-  double r_drive_out = util::clip_num(rightPID.output - headingPID.output, r_slew_out, -r_slew_out);
+  double l_drive_out = util::clip_num(leftPID.output, l_slew_out, -l_slew_out);
+  double r_drive_out = util::clip_num(rightPID.output, r_slew_out, -r_slew_out);
 
   // Toggle heading
-  double gyro_out = headingPID.output;
+  double gyro_out = util::clip_num(headingPID.output, max_speed, -max_speed);
 
   // Combine heading and drive
   double l_out = l_drive_out + gyro_out;
   double r_out = r_drive_out - gyro_out;
+  // printf("angle_deg%f\n", angle_deg);
+
+  // printf("L %f  R %f  G %f    x%i y%i\n", leftPID.error/LEFT_TICK_PER_INCH, rightPID.error/RIGHT_TICK_PER_INCH, headingPID.error, util::sgn(global_x_target-x_pos), util::sgn(global_y_target-y_pos));
+  printf("Current (%.2f, %.2f)    Target (%.2f, %.2f)   Angle Target %.2f\n", x_pos, y_pos, global_x_target, global_y_target, angle);
 
   // Set motors
   if (drive_toggle)
-    set_tank(l_drive_out, r_drive_out);
+    set_tank(l_out, r_out);
 }

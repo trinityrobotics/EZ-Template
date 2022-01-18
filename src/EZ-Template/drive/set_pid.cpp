@@ -51,7 +51,7 @@ void Drive::set_drive_pid(double target, int speed, bool slew_on, bool toggle_he
   l_start = left_sensor();
   r_start = right_sensor();
 
-  double l_target_encoder, r_target_encoder;
+  double l_target_encoder = 0, r_target_encoder = 0;
 
   // Figure actual target value
 
@@ -113,7 +113,7 @@ void Drive::set_swing_pid(e_swing type, double target, int speed) {
 }
 
 // Set drive PID
-void Drive::go_to_point(double x_target, double y_target, int speed, bool slew_on) {
+void Drive::go_to_point(bool direction, double x_target, double y_target, int speed, bool slew_on) {
   LEFT_TICK_PER_INCH = get_tick_per_inch(left_tracker);
   RIGHT_TICK_PER_INCH = get_tick_per_inch(right_tracker);
 
@@ -124,12 +124,16 @@ void Drive::go_to_point(double x_target, double y_target, int speed, bool slew_o
   r_start = right_sensor();
   global_x_target = x_target;
   global_y_target = y_target;
+  current_direction = direction;
 
-  double l_target_encoder, r_target_encoder;
+  x_error_sgn = util::sgn(global_x_target - x_pos);
+  y_error_sgn = util::sgn(global_y_target - y_pos);
+
+  double l_target_encoder = 0, r_target_encoder = 0;
 
   // Figure actual target value
-  double target = distance_to_point(x_target, y_target);
-  double heading = angle_to_point(x_target, y_target);
+  double target = distance_to_point(x_target, y_target, direction);
+  double heading = angle_to_point(x_target, y_target, direction);
 
   l_target_encoder = l_start + (target * LEFT_TICK_PER_INCH);
   r_target_encoder = r_start + (target * RIGHT_TICK_PER_INCH);
