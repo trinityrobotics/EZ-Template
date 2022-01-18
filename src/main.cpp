@@ -136,8 +136,8 @@ void autonomous() {
   chassis.reset_odom(); // Resets x, y and angle to 0
   chassis.set_drive_brake(MOTOR_BRAKE_HOLD); // Set motors to hold.  This helps autonomous consistency.
 
-  int dist = 10;
-  int speed = 20;
+  int dist = 18;
+  int speed = 110;
   chassis.go_to_point(ez::FWD, dist, dist, speed);
   chassis.wait_drive();
 
