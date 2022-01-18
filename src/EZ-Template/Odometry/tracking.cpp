@@ -28,47 +28,60 @@ void Drive::tracking_task() {
   double c_current = 0;
   double l = 0, r = 0, c = 0;  // delta distance
   double l_last = 0, r_last = 0, c_last = 0;
-  double radius_l = 0, h = 0;  // rad for big circle
+  double radius_l = 0, radiusC = 0, h = 0, h2 = 0;  // rad for big circle
   double beta = 0, alpha = 0, theta = 0;
-  double x = 0, y = 0;
+  double Xx = 0, Yy = 0, Xy = 0, Yx = 0;
   while (true) {
     l_current = left_sensor() / LEFT_TICK_PER_INCH;
     r_current = right_sensor() / RIGHT_TICK_PER_INCH;
-    // c_current = center_tracker->get_value() / CENTER_TICK_PER_INCH;
+    c_current = center_tracker->get_value() / CENTER_TICK_PER_INCH;
 
     l = l_current - l_last;
     r = r_current - r_last;
-    // c = c_current - c_last;
+    c = c_current - c_last;
 
     l_last = l_current;
     r_last = r_current;
-    // c_last = c_current;
+    c_last = c_current;
 
     double width = left_tracker->offset + right_tracker->offset;
+    double c_offset = center_tracker ->offset;
 
     // diff between wheels for correcting turning
     theta = (l - r) / width;
 
+
+	 
     if (theta != 0) {
       radius_l = l / theta;
       beta = theta / 2.0;
       h = ((radius_l + (width / 2.0)) * sin(beta)) * 2.0;
+      if(selected_constructor == ez::TRACKING_THREE_WHEEL_IMU ||selected_constructor == ez::TRACKING_THREE_WHEEL_NO_IMU){
+      radiusC = c / theta;
+      h2 = (radiusC + c_offset) * 2 *sin(beta); 
+      }
     } else {
       h = l;
+      h2 = 0;
       beta = 0;
     }
 
+    
+
+
     alpha = angle + beta;
+    
+    Xx = h2 * cos(alpha);
+    Xy = h2 * -sin(alpha);
+    Yx = h * sin(alpha);
+    Yy = h * cos(alpha);
 
-    x = h * sin(alpha);
-    y = h * cos(alpha);
-
-    x_pos += x;
-    y_pos += y;
+    x_pos += Xx + Yx;
+    y_pos += Xy + Yy;
     angle += theta;
 
-    if (!(selected_constructor != TRACKING_THREE_WHEEL_IMU || selected_constructor != TRACKING_THREE_WHEEL_NO_IMU || selected_constructor != TRACKING_TWO_WHEEL_IMU || selected_constructor != TRACKING_TWO_WHEEL_NO_IMU))
-      tracking.suspend();
+    // if (!(selected_constructor != TRACKING_THREE_WHEEL_IMU || selected_constructor != TRACKING_THREE_WHEEL_NO_IMU || selected_constructor != TRACKING_TWO_WHEEL_IMU || selected_constructor != TRACKING_TWO_WHEEL_NO_IMU))
+    //   tracking.suspend();
 
     pros::delay(1);
   }
