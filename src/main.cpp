@@ -1,6 +1,7 @@
 #include "main.h"
 
 /*
+
 Tracking_Wheel left_p  {pros::Motor(7,true),  4.125, 600, 7.0625, 1.875};
 Tracking_Wheel right_p {pros::Motor(4), 4.125, 600, 7.0625, 1.875};
 // Chassis constructor
@@ -12,28 +13,7 @@ Drive chassis (
 
   // Right Tracker
   ,&right_p
-
-  ,11
 );
-
-
-
-double width = 12.75;
-Tracking_Wheel left_p  {pros::Motor(11,true),  3.25, 600, width/2, 1.6667};
-Tracking_Wheel right_p {pros::Motor(2), 3.25, 600, width/2, 1.6667};
-// Chassis constructor
-Drive chassis (
-  {-11, -5, -7},{2, 3, 17}
-
-  // Left Tracker
-  ,&left_p
-
-  // Right Tracker
-  ,&right_p
-);
-
-*/
-
 Tracking_Wheel left_p  {pros::Motor(15,true),  2.5, 600, 5.5};
 Tracking_Wheel right_p {pros::Motor(6), 2.5, 600, 5.5};
 // Chassis constructor
@@ -50,6 +30,22 @@ Drive chassis (
   // Right Tracker
   ,&right_p
 );
+
+*/
+double width = 12.75;
+Tracking_Wheel left_p  {pros::Motor(11,true),  3.25, 600, width/2, 1.6667};
+Tracking_Wheel right_p {pros::Motor(2), 3.25, 600, width/2, 1.6667};
+// Chassis constructor
+Drive chassis (
+  {-11, -5, -7},{2, 3, 17}
+
+  // Left Tracker
+  ,&left_p
+
+  // Right Tracker
+  ,&right_p
+);
+
 
 
 /**
@@ -136,11 +132,13 @@ void autonomous() {
   chassis.reset_odom(); // Resets x, y and angle to 0
   chassis.set_drive_brake(MOTOR_BRAKE_HOLD); // Set motors to hold.  This helps autonomous consistency.
 
-  int dist = 18;
-  int speed = 110;
+
+  int dist = 15;
+  int speed = 30;
   chassis.go_to_point(ez::FWD, dist, dist, speed);
   chassis.wait_drive();
-
+  
+  /*
   chassis.go_to_point(ez::REV, 0, dist*2, speed);
   chassis.wait_drive();
 
@@ -149,6 +147,8 @@ void autonomous() {
 
   chassis.go_to_point(ez::REV, 0, 0, speed);
   chassis.wait_drive();
+  */
+  
 }
 
 
@@ -172,7 +172,7 @@ void opcontrol() {
 
   while (true) {
 
-    // chassis.tank(); // Tank control
+    chassis.tank(); // Tank control
     // chassis.arcade_standard(ez::SPLIT); // Standard split arcade
     // chassis.arcade_standard(ez::SINGLE); // Standard single arcade
     // chassis.arcade_flipped(ez::SPLIT); // Flipped split arcade

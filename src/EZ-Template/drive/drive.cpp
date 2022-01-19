@@ -238,9 +238,9 @@ void Drive::set_tank(int left, int right) {
 }
 
 void Drive::set_drive_current_limit(int mA) {
-  if (abs(mA) > 2500) {
+  if (abs(mA) > 2500) 
     mA = 2500;
-  }
+  
   CURRENT_MA = mA;
   for (auto i : left_motors) {
     if (!pto_check(i)) i.set_current_limit(abs(mA));  // If the motor is in the pto list, don't do anything to the motor.

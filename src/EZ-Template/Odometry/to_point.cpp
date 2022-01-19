@@ -31,8 +31,13 @@ double Drive::angle_to_point(double x_target, double y_target, e_direction direc
   // Flips target when traveling backwards
   int add = direction == REV ? 180 : 0;
 
+  // Flips target when traveling backwards
+  if (util::sgn(x_error) != x_error_sgn && util::sgn(y_error) != y_error_sgn)
+    add = add == 180 ? 0 : 180;
+
   // Displacement of error
   double error = util::wrap_angle((util::to_deg(atan2(x_error, y_error)) - add) - get_gyro());
+  printf("Current (%.2f, %.2f)    Target (%.2f, %.2f)   Angle Error %.2f   Add %i\n", x_pos, y_pos, global_x_target, global_y_target, headingPID.error, add);
 
   return error;
 }
