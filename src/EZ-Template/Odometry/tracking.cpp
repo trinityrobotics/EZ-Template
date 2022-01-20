@@ -9,19 +9,24 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 using namespace ez;
 
-void Drive::set_x(double x) { x_pos = x; }
-void Drive::set_y(double y) { y_pos = y; }
-
-void Drive::set_theta(double a) {
-  reset_gyro(a);
-  angle_rad = util::to_rad(a);
-  angle_deg = a;
+void Drive::set_x(double x) {
+  x_pos = x;
+  target.x = x;
 }
 
-void Drive::reset_odom() {
-  set_theta(0);
-  set_x(0);
-  set_y(0);
+void Drive::set_y(double y) {
+  y_pos = y;
+  target.y = y;
+}
+
+void Drive::set_theta(double a) { set_angle(a); }
+
+void Drive::reset_odom() { set_pose({0, 0, 0}); }
+
+void Drive::set_pose(pose target) {
+  set_theta(target.theta);
+  set_x(target.x);
+  set_y(target.y);
 }
 
 void Drive::tracking_task() {

@@ -11,15 +11,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 using namespace ez;
 
 // Projected point from a target
-pose Drive::vector_off_point(double added, double theta, double x_target, double y_target, e_direction direction) {
-  /// this needs work
-  double y_error = sin(util::to_rad(theta)) * added;
-  double x_error = sqrt(pow(added, 2) - pow(y_error, 2));
+pose Drive::vector_off_point(double added, double theta, double x_target, double y_target) {
+  double x_error = sin(util::to_rad(theta)) * added;
+  double y_error = cos(util::to_rad(theta)) * added;
 
-  pose target;
-  target.x = x_error + x_target;
-  target.y = y_error + y_target;
-  return target;
+  pose output;
+  output.x = x_error + x_target;
+  output.y = y_error + y_target;
+  printf("Current (%.2f, %.2f)    Target (%.2f, %.2f)   Angle Error %.2f      Vector (%.2f, %.2f, %.2f)\n", x_pos, y_pos, global_x_target, global_y_target, headingPID.error, output.x, output.y, theta);
+  return output;
 }
 
 // Finds error in shortest angle to point
@@ -37,7 +37,7 @@ double Drive::angle_to_point(double x_target, double y_target, e_direction direc
 
   // Displacement of error
   double error = util::wrap_angle((util::to_deg(atan2(x_error, y_error)) - add) - get_gyro());
-  printf("Current (%.2f, %.2f)    Target (%.2f, %.2f)   Angle Error %.2f   Add %i\n", x_pos, y_pos, global_x_target, global_y_target, headingPID.error, add);
+  // printf("Current (%.2f, %.2f)    Target (%.2f, %.2f)   Angle Error %.2f   Add %i\n", x_pos, y_pos, global_x_target, global_y_target, headingPID.error, add);
 
   return error;
 }

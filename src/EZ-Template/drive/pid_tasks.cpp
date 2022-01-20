@@ -110,9 +110,16 @@ void Drive::go_to_point_task() {
   if (abs(hypot) < 3) {
     angle = settled_angle;
   } else {*/
+  // angle = angle_to_point(global_x_target, global_y_target, current_direction);
+  //  settled_angle = angle;
+  // }
+
+  if (abs(hypot) < 3) {
+    pose output = vector_off_point(3, target.theta, target.x, target.y);
+    angle = angle_to_point(output.x, output.y, current_direction);
+  } else {
     angle = angle_to_point(global_x_target, global_y_target, current_direction);
-    //settled_angle = angle;
-  //}
+  }
 
   // Update targets
   leftPID.set_target((hypot * LEFT_TICK_PER_INCH));
@@ -139,7 +146,7 @@ void Drive::go_to_point_task() {
   double l_out = l_drive_out + gyro_out;
   double r_out = r_drive_out - gyro_out;
 
-  //printf("Current (%.2f, %.2f)    Target (%.2f, %.2f)   Angle Error %.2f\n", x_pos, y_pos, global_x_target, global_y_target, headingPID.error);
+  // printf("Current (%.2f, %.2f)    Target (%.2f, %.2f)   Angle Error %.2f\n", x_pos, y_pos, global_x_target, global_y_target, headingPID.error);
 
   // Set motors
   if (drive_toggle)

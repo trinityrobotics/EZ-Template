@@ -14,6 +14,21 @@ Drive chassis (
   // Right Tracker
   ,&right_p
 );
+
+double width = 12.75;
+Tracking_Wheel left_p  {pros::Motor(11,true),  3.25, 600, width/2, 1.6667};
+Tracking_Wheel right_p {pros::Motor(2), 3.25, 600, width/2, 1.6667};
+// Chassis constructor
+Drive chassis (
+  {-11, -5, -7},{2, 3, 17}
+
+  // Left Tracker
+  ,&left_p
+
+  // Right Tracker
+  ,&right_p
+);
+*/
 Tracking_Wheel left_p  {pros::Motor(15,true),  2.5, 600, 5.5};
 Tracking_Wheel right_p {pros::Motor(6), 2.5, 600, 5.5};
 // Chassis constructor
@@ -30,22 +45,6 @@ Drive chassis (
   // Right Tracker
   ,&right_p
 );
-
-*/
-double width = 12.75;
-Tracking_Wheel left_p  {pros::Motor(11,true),  3.25, 600, width/2, 1.6667};
-Tracking_Wheel right_p {pros::Motor(2), 3.25, 600, width/2, 1.6667};
-// Chassis constructor
-Drive chassis (
-  {-11, -5, -7},{2, 3, 17}
-
-  // Left Tracker
-  ,&left_p
-
-  // Right Tracker
-  ,&right_p
-);
-
 
 
 /**
@@ -134,11 +133,15 @@ void autonomous() {
 
 
   int dist = 15;
-  int speed = 30;
+  int speed = 20;
+
+  chassis.set_pose({0, 0, 45});
+  chassis.set_odom_pid(dist, speed);
+  chassis.wait_drive();
+  /*
   chassis.go_to_point(ez::FWD, dist, dist, speed);
   chassis.wait_drive();
   
-  /*
   chassis.go_to_point(ez::REV, 0, dist*2, speed);
   chassis.wait_drive();
 
