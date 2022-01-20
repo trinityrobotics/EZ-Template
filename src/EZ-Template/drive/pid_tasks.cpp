@@ -113,13 +113,16 @@ void Drive::go_to_point_task() {
   // angle = angle_to_point(global_x_target, global_y_target, current_direction);
   //  settled_angle = angle;
   // }
-
-  if (abs(hypot) < 3) {
-    pose output = vector_off_point(3, target.theta, target.x, target.y);
-    angle = angle_to_point(output.x, output.y, current_direction);
-  } else {
-    angle = angle_to_point(global_x_target, global_y_target, current_direction);
-  }
+  /*
+    if (abs(hypot) < 3) {
+      pose output = vector_off_point(3, target.theta, target.x, target.y);
+      angle = angle_to_point(output.x, output.y, current_direction);
+    } else {
+      angle = angle_to_point(global_x_target, global_y_target, current_direction);
+    }
+    */
+  pose output = vector_off_point(3, target.theta, target.x, target.y);
+  angle = angle_to_point(output.x, output.y, current_direction);
 
   // Update targets
   leftPID.set_target((hypot * LEFT_TICK_PER_INCH));

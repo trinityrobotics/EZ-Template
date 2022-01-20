@@ -136,7 +136,7 @@ void autonomous() {
   int speed = 20;
 
   chassis.set_pose({0, 0, 45});
-  chassis.set_odom_pid(dist, speed);
+  chassis.set_odom_pid(-dist, speed);
   chassis.wait_drive();
   /*
   chassis.go_to_point(ez::FWD, dist, dist, speed);
