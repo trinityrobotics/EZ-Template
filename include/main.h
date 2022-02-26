@@ -44,7 +44,12 @@
 #include "EZ-Template/api.hpp"
 
 // More includes here...
+#include "robot.h"
 #include "autons.hpp"
+#include "grabber.hpp"
+#include "hoarder.hpp"
+#include "intake.hpp"
+#include "lift.hpp"
 
 /**
  * If you find doing pros::Motor() to be tedious and you'd prefer just to do
