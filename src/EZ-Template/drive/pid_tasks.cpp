@@ -18,6 +18,10 @@ void Drive::ez_auto_task() {
       turn_pid_task();
     else if (get_mode() == SWING)
       swing_pid_task();
+    else if (get_mode() == GPS_TURN)
+      gps_turn_pid_task();
+    else if (get_mode() == GPS_DRIVE)
+      gps_drive_pid_task();
 
     if (pros::competition::is_autonomous() && !util::AUTON_RAN)
       util::AUTON_RAN = true;
@@ -55,10 +59,70 @@ void Drive::drive_pid_task() {
     set_tank(l_out, r_out);
 }
 
+// Drive PID task
+void Drive::gps_drive_pid_task() {
+  // Get GPS Data
+  pros::c::gps_status_s_t gpsData = gps.get_status();
+  double current_heading = fmod(gps.get_heading() + 180, 360);
+  double target_heading = 360 + ez::util::get_angle(gpsData.x, gpsData.y, target_x, target_y);
+  double current_distance = ez::util::get_distance(gpsData.x, gpsData.y, target_x, target_y) * TICK_PER_METER;
+  double pid_target = distancePID.get_target();
+  double distance_travelled = pid_target - current_distance > 0 ? pid_target - current_distance : 0;
+
+  if (abs(target_heading - current_heading) < 10 ) {
+    headingPID.set_target(target_heading);
+  }
+
+  pros::screen::print(pros::E_TEXT_SMALL, 3, "Distance PID: %f, Current: %f\n", pid_target, current_distance);
+
+  // Compute PID
+  distancePID.compute(distance_travelled * 100);
+  headingPID.compute(current_heading);
+
+  // Combine heading and drive
+  double l_out = distancePID.output + headingPID.output;
+  double r_out = distancePID.output - headingPID.output;
+
+  pros::screen::print(pros::E_TEXT_SMALL, 4, "PID Distance: %f, Heading: %f\n", distancePID.output, headingPID.output);
+
+  // Set motors
+  if (drive_toggle)
+    set_tank(l_out, r_out);
+}
+
 // Turn PID task
 void Drive::turn_pid_task() {
   // Compute PID
   turnPID.compute(get_gyro());
+
+  // Clip gyroPID to max speed
+  double gyro_out = util::clip_num(turnPID.output, max_speed, -max_speed);
+
+  // Clip the speed of the turn when the robot is within StartI, only do this when target is larger then StartI
+  if (turnPID.constants.ki != 0 && (fabs(turnPID.get_target()) > turnPID.constants.start_i && fabs(turnPID.error) < turnPID.constants.start_i)) {
+    if (get_turn_min() != 0)
+      gyro_out = util::clip_num(gyro_out, get_turn_min(), -get_turn_min());
+  }
+
+  // Set motors
+  if (drive_toggle)
+    set_tank(gyro_out, -gyro_out);
+}
+
+
+// GPS Turn PID task
+void Drive::gps_turn_pid_task() {
+  // Get GPS Data
+  pros::c::gps_status_s_t gpsData = gps.get_status();
+  double current_heading = fmod(gps.get_heading() + 180, 360);
+  double target_heading = 360 + ez::util::get_angle(gpsData.x, gpsData.y, target_x, target_y);
+
+  if (abs(target_heading - current_heading) < 10 ) {
+    turnPID.set_target(target_heading);
+  }
+
+  // Compute PID
+  turnPID.compute(fmod(gps.get_heading() + 180, 360));
 
   // Clip gyroPID to max speed
   double gyro_out = util::clip_num(turnPID.output, max_speed, -max_speed);

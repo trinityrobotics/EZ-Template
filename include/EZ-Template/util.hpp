@@ -69,7 +69,9 @@ enum exit_output { RUNNING = 1,
 enum e_mode { DISABLE = 0,
               SWING = 1,
               TURN = 2,
-              DRIVE = 3 };
+              DRIVE = 3,
+              GPS_TURN = 4,
+              GPS_DRIVE = 5};
 
 /**
  * Outputs string for exit_condition enum.
@@ -93,6 +95,16 @@ bool is_reversed(double input);
  * Returns input restricted to min-max threshold
  */
 double clip_num(double input, double max, double min);
+
+/**
+ * Returns angle between two points
+ */
+double get_angle(double x1, double y1, double x2, double y2);
+
+/**
+ * Returns angle between two points
+ */
+double get_distance(double x1, double y1, double x2, double y2);
 
 /**
  * Is the SD card plugged in?

@@ -54,6 +54,11 @@ class Drive {
   std::vector<int> pto_active;
 
   /**
+   * GPS sensor.
+   */
+  pros::Gps gps;
+
+  /**
    * Inertial sensor.
    */
   pros::Imu imu;
@@ -82,6 +87,7 @@ class Drive {
    * PID objects.
    */
   PID headingPID;
+  PID distancePID;
   PID turnPID;
   PID forward_drivePID;
   PID leftPID;
@@ -131,6 +137,32 @@ class Drive {
    *        External gear ratio, wheel gear / motor gear.
    */
   Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports, int imu_port, double wheel_diameter, double ticks, double ratio);
+
+  /**
+   * Creates a Drive Controller using internal encoders and GPS
+   *
+   * \param left_motor_ports
+   *        Input {1, -2...}.  Make ports negative if reversed!
+   * \param right_motor_ports
+   *        Input {-3, 4...}.  Make ports negative if reversed!
+   * \param imu_port
+   *        Port the IMU is plugged into.
+   * \param wheel_diameter
+   *        Diameter of your drive wheels.  Remember 4" is 4.125"!
+   * \param ticks
+   *        Motor cartridge RPM
+   * \param ratio
+   *        External gear ratio, wheel gear / motor gear.
+   * \param gps_port
+   *        Port the GPS is plugged into.
+   * \param gps_x_offset
+   *        The x offset of the GPS sesnor.
+   * \param gps_y_offset
+   *        The y offset of the GPS sesnor.
+   * \param gps_yaw_offset
+   *        The roll offset of the GPS sesnor.
+   */
+  Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports, int imu_port, double wheel_diameter, double ticks, double ratio, int gps_port, double gps_x_offset, double gps_y_offset, double gps_yaw_offset);
 
   /**
    * Creates a Drive Controller using encoders plugged into the brain.
@@ -482,6 +514,11 @@ class Drive {
    */
   void imu_loading_display(int iter);
 
+  /**
+   * Set the target for the chassis.
+   */
+  void set_target(double input_x, double input_y);
+
   /////
   //
   // Autonomous Functions
@@ -503,6 +540,22 @@ class Drive {
   void set_drive_pid(double target, int speed, bool slew_on = false, bool toggle_heading = true);
 
   /**
+   * Sets the robot to move forward using PID.
+   *
+   * \param target_x
+   *        target x value
+   * \param target_y
+   *        target y value
+   * \param speed
+   *        0 to 127, max speed during motion
+   * \param slew_on
+   *        ramp up from slew_min to speed over slew_distance.  only use when you're going over about 14"
+   * \param toggle_heading
+   *        toggle for heading correction
+   */
+  void set_gps_drive_pid(double target_x, double target_y, int speed, bool slew_on = false, bool toggle_heading = true);
+
+  /**
    * Sets the robot to turn using PID.
    *
    * \param target
@@ -511,6 +564,18 @@ class Drive {
    *        0 to 127, max speed during motion
    */
   void set_turn_pid(double target, int speed);
+
+  /**
+   * Sets the robot to turn using PID.
+   *
+   * \param target_x
+   *        target x value
+   * \param target_y
+   *        target y value
+   * \param speed
+   *        0 to 127, max speed during motion
+   */
+  void set_gps_turn_pid(double target_x, double target_y, int speed);
 
   /**
    * Turn using only the left or right side.
@@ -650,6 +715,11 @@ class Drive {
   double get_tick_per_inch();
 
   /**
+   * Returns current tick_per_meter()
+   */
+  double get_tick_per_meter();
+
+  /**
    * Returns current tick_per_inch()
    */
   void modify_curve_with_controller();
@@ -720,6 +790,7 @@ class Drive {
    */
   double TICK_PER_REV;
   double TICK_PER_INCH;
+  double TICK_PER_METER;
   double CIRCUMFERENCE;
 
   double CARTRIDGE;
@@ -737,6 +808,8 @@ class Drive {
   void drive_pid_task();
   void swing_pid_task();
   void turn_pid_task();
+  void gps_turn_pid_task();
+  void gps_drive_pid_task();
   void ez_auto_task();
 
   /**
@@ -811,4 +884,12 @@ class Drive {
   void l_increase();
   void r_decrease();
   void r_increase();
+
+  /**
+   * GPS
+   */
+  double gps_yaw_offset;
+  double target_x;
+  double target_y;
+
 };

@@ -7,11 +7,11 @@
 /////
 
 
-const int DRIVE_SPEED = 100; // This is 110/127 (around 87% of max speed).  We don't suggest making this 127.
+const int DRIVE_SPEED = 127; // This is 110/127 (around 87% of max speed).  We don't suggest making this 127.
                              // If this is 127 and the robot tries to heading correct, it's only correcting by
                              // making one side slower.  When this is 87%, it's correcting by making one side
                              // faster and one side slower, giving better heading correction.
-const int TURN_SPEED  = 75;
+const int TURN_SPEED  = 80;
 const int SWING_SPEED = 90;
 const int SLOW_DRIVE_SPEED = 80;
 
@@ -28,9 +28,9 @@ void default_constants() {
   chassis.set_slew_min_power(80, 80);
   chassis.set_slew_distance(7, 7);
   chassis.set_pid_constants(&chassis.headingPID, 11, 0, 20, 0);
-  chassis.set_pid_constants(&chassis.forward_drivePID, .75, 0, 5, 0);
+  chassis.set_pid_constants(&chassis.forward_drivePID, .45, 0, 5, 0);
   chassis.set_pid_constants(&chassis.backward_drivePID, .25, 0, 5, 0);
-  chassis.set_pid_constants(&chassis.turnPID, 6, 0.003, 35, 15);
+  chassis.set_pid_constants(&chassis.turnPID, 3, 0.003, 35, 15);
   chassis.set_pid_constants(&chassis.swingPID, 7, 0, 45, 0);
 }
 
@@ -65,72 +65,112 @@ void modified_exit_condition() {
   chassis.set_exit_condition(chassis.swing_exit, 100, 3, 500, 7, 500, 500);
   chassis.set_exit_condition(chassis.drive_exit, 80, 50, 300, 150, 500, 500);
 }
+// Autnomous Skills
+void skills_gps_auton1(void) {
+  // set_lift_state(LIFT_DOWN);
+  // set_hoarder_state(HOARDER_DOWN);
+  // wait_hoarder();
+  // pros::delay(1000);
+  // chassis.set_drive_pid(-6, DRIVE_SPEED);
+  // pros::delay(1000);
+  // set_hoarder_state(HOARDER_UP);
+  // wait_hoarder();
+  // chassis.set_turn_pid(270, TURN_SPEED);
+  // chassis.wait_drive();
+  // chassis.set_drive_pid(24, TURN_SPEED);
+  // chassis.wait_drive();
+  // pros::delay(1000);
+  // chassis.set_gps_turn_pid(0,0, TURN_SPEED);
+  // chassis.wait_drive();
+  chassis.set_gps_turn_pid(0,0, TURN_SPEED);
+  chassis.wait_drive();
+  master.rumble("- - -");
+  pros::delay(5000);
+  chassis.set_gps_drive_pid(0,0, 30);
+  chassis.wait_drive();
+  master.rumble("-- -- --");  
+}
+
+void gps_debug(void) {
+  while (1) {
+    pros::c::gps_status_s_t gpsData = chassis.gps.get_status();
+    double current_heading = fmod(chassis.gps.get_heading() + 180, 360);
+    // double target_heading = fmod((atan2(y2 - y1, x2 - x1)/M_PI*180),360);
+    double target_heading = (atan2(0 - gpsData.x, 0 - gpsData.y)/M_PI*180);
+    double target_distance = ez::util::get_distance(gpsData.x, gpsData.y, 0, 0);
+    pros::screen::print(pros::E_TEXT_SMALL, 2, "Error: %f\n", chassis.gps.get_error());
+    pros::screen::print(pros::E_TEXT_SMALL, 3, "Position X: %f, Y: %f\n", gpsData.x, gpsData.y);
+    pros::screen::print(pros::E_TEXT_SMALL, 4, "Heading Current: %f; Target: %f\n", current_heading, 360 + target_heading);
+    pros::screen::print(pros::E_TEXT_SMALL, 5, "Distance Target: %f\n", target_distance);
+    pros::delay(20);
+  }
+}
 
 // Autnomous Skills
 void skills_autonomous1(void) {
+  chassis.set_angle(0);
   set_lift_state(LIFT_DOWN);
   set_hoarder_state(HOARDER_DOWN);
   wait_hoarder();
-  pros::delay(1000);
-  chassis.set_drive_pid(-6, DRIVE_SPEED);
-  pros::delay(1000);
+  pros::delay(500);
+  chassis.set_drive_pid(-6, DRIVE_SPEED, true);
+  pros::delay(500);
   set_hoarder_state(HOARDER_UP);
   wait_hoarder();
   chassis.set_turn_pid(90, TURN_SPEED);
   chassis.wait_drive(); 
   set_intake_state(INTAKE_FORWARD);
-  chassis.set_drive_pid(46, DRIVE_SPEED);
+  chassis.set_drive_pid(46, DRIVE_SPEED, true);
   chassis.wait_drive();
   set_grabber_state(GRABBER_DOWN);
   wait_grabber();
-  pros::delay(1000);
-  set_lift_state(LIFT_UP);
-  chassis.set_turn_pid(117, TURN_SPEED);
-  chassis.wait_drive();  
   pros::delay(400);
-  chassis.set_drive_pid(54, DRIVE_SPEED);
+  set_lift_state(LIFT_UP);
+  chassis.set_turn_pid(117, TURN_SPEED);  
+  pros::delay(200);
+  chassis.set_drive_pid(54, DRIVE_SPEED, true);
   chassis.wait_drive();
   set_lift_state(LIFT_PLACE);
-  pros::delay(1000);
+  pros::delay(200);
   set_grabber_state(GRABBER_UP);
   wait_grabber();
   // yellow base on platform 40pts
-  chassis.set_drive_pid(-35, DRIVE_SPEED);
+  chassis.set_drive_pid(-35, DRIVE_SPEED, true);
   chassis.wait_drive();
   set_lift_state(LIFT_DOWN);
   set_hoarder_state(HOARDER_DOWN);
   wait_hoarder();
-  chassis.set_drive_pid(15, DRIVE_SPEED);
+  chassis.set_drive_pid(15, SLOW_DRIVE_SPEED);
   chassis.wait_drive();
   set_hoarder_state(HOARDER_UP);
-  chassis.set_turn_pid(-63, TURN_SPEED);
+  chassis.set_turn_pid(-58, TURN_SPEED);
   chassis.wait_drive();  
-  pros::delay(400);
-  chassis.set_drive_pid(13, DRIVE_SPEED);
+  pros::delay(200);
+  chassis.set_drive_pid(15, SLOW_DRIVE_SPEED);
   chassis.wait_drive();
-  pros::delay(500);
+  pros::delay(200);
   set_grabber_state(GRABBER_DOWN);
   wait_grabber();
-  pros::delay(500);
+  pros::delay(200);
   set_lift_state(LIFT_UP);
   chassis.set_turn_pid(122, TURN_SPEED);
   chassis.wait_drive();
-  chassis.set_drive_pid(52, DRIVE_SPEED);
+  chassis.set_drive_pid(56, DRIVE_SPEED, true);
   chassis.wait_drive();
   set_grabber_state(GRABBER_UP);
   wait_grabber();
-  // red/blue base on platform from hoarder 80pts
-  chassis.set_drive_pid(-4, DRIVE_SPEED);
+  chassis.set_drive_pid(-1, DRIVE_SPEED, true);
   chassis.wait_drive();
-  chassis.set_turn_pid(-0, TURN_SPEED);
+  // red/blue base on platform from hoarder 80pts
+  chassis.set_turn_pid(3, TURN_SPEED);
   chassis.wait_drive();
   set_lift_state(LIFT_DOWN);
-  pros::delay(500);
-  chassis.set_drive_pid(42, DRIVE_SPEED);
+  pros::delay(400);
+  chassis.set_drive_pid(49, DRIVE_SPEED, true);
   chassis.wait_drive();
   set_grabber_state(GRABBER_DOWN);
   wait_grabber();
-  pros::delay(500);
+  pros::delay(200);
   set_lift_state(LIFT_UP);
   chassis.set_drive_pid(-6, DRIVE_SPEED, true);
   chassis.wait_drive();
@@ -140,59 +180,187 @@ void skills_autonomous1(void) {
   chassis.set_drive_pid(92, DRIVE_SPEED, true);
   chassis.wait_drive();
   set_lift_state(LIFT_PLACE);
-  pros::delay(500);
+  pros::delay(200);
   set_grabber_state(GRABBER_UP);
   wait_grabber();
   // blue/red base on platform 120pts
-  chassis.set_drive_pid(-6, DRIVE_SPEED);
+  chassis.set_drive_pid(-6, DRIVE_SPEED, true);
   chassis.wait_drive();
-  chassis.set_turn_pid(-221, TURN_SPEED);
+  chassis.set_turn_pid(-218, TURN_SPEED);
   chassis.wait_drive();
   set_lift_state(LIFT_DOWN);
-  chassis.set_drive_pid(46, DRIVE_SPEED);
+  chassis.set_drive_pid(49, DRIVE_SPEED, true);
   chassis.wait_drive();
   set_grabber_state(GRABBER_DOWN);
   wait_grabber();
   set_lift_state(LIFT_UP);
-  chassis.set_turn_pid(-56, TURN_SPEED);
+  chassis.set_turn_pid(-48, TURN_SPEED);
   chassis.wait_drive();
-  chassis.set_drive_pid(52, DRIVE_SPEED, true);
+  chassis.set_drive_pid(56, DRIVE_SPEED, true);
   chassis.wait_drive();
   set_lift_state(LIFT_PLACE);
-  pros::delay(500);
+  pros::delay(200);
   set_grabber_state(GRABBER_UP);
   wait_grabber();
   // yellow base on platform 160pts
   chassis.set_drive_pid(-4, DRIVE_SPEED, true);
   chassis.wait_drive();
-  chassis.set_turn_pid(-180, TURN_SPEED);
+  chassis.set_turn_pid(-179, TURN_SPEED);
   chassis.wait_drive();
   set_lift_state(LIFT_DOWN);
-  pros::delay(500);
-  chassis.set_drive_pid(42,DRIVE_SPEED );
+  pros::delay(200);
+  chassis.set_drive_pid(43, DRIVE_SPEED, true);
   chassis.wait_drive();
   set_grabber_state(GRABBER_DOWN);
   wait_grabber();
   set_lift_state(LIFT_UP);
-  chassis.set_drive_pid(-4, DRIVE_SPEED);
+  chassis.set_drive_pid(-4, DRIVE_SPEED, true);
   chassis.wait_drive();
-  chassis.set_turn_pid( -300 , TURN_SPEED);
+  chassis.set_turn_pid( -298 , TURN_SPEED);
   chassis.wait_drive();
-  chassis.set_drive_pid(100, SLOW_DRIVE_SPEED, true);
+  chassis.set_drive_pid(100, DRIVE_SPEED, true);
   chassis.wait_drive();
   set_lift_state(LIFT_PLACE);
   set_grabber_state(GRABBER_UP);
   wait_grabber();
-  // red/blue base on platform 200pts
-  chassis.set_drive_pid(-4, DRIVE_SPEED);
+  // big yellow base on platform 200pts
+  chassis.set_drive_pid(-6, DRIVE_SPEED);
   chassis.wait_drive();
-  chassis.set_turn_pid( 180, TURN_SPEED);
+  chassis.set_turn_pid( -265, TURN_SPEED);
   chassis.wait_drive();
-  set_lift_state(LIFT_DOWN);
-  chassis.set_drive_pid(40, DRIVE_SPEED, true);
+  set_lift_state(LIFT_UP2);
+  chassis.set_drive_pid(-60, DRIVE_SPEED, true);
   chassis.wait_drive();
+  // red/blue base on platform 220pts
   master.rumble("-- -- --");
 }
+
+// Autnomous Skills
+void skills_autonomous2(void) {
+  chassis.set_angle(0);
+  set_lift_state(LIFT_DOWN);
+  set_hoarder_state(HOARDER_DOWN);
+  wait_hoarder();
+  pros::delay(500);
+  chassis.set_drive_pid(-6, DRIVE_SPEED, true);
+  pros::delay(500);
+  set_hoarder_state(HOARDER_UP);
+  wait_hoarder();
+  chassis.set_turn_pid(90, TURN_SPEED);
+  chassis.wait_drive(); 
+  set_intake_state(INTAKE_FORWARD);
+  chassis.set_drive_pid(46, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  set_grabber_state(GRABBER_DOWN);
+  wait_grabber();
+  pros::delay(200);
+  set_lift_state(LIFT_UP);
+  chassis.set_turn_pid(117, TURN_SPEED);  
+  chassis.set_drive_pid(54, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  set_lift_state(LIFT_PLACE);
+  pros::delay(200);
+  set_grabber_state(GRABBER_UP);
+  wait_grabber();
+  // yellow base on platform 40pts
+  chassis.set_drive_pid(-35, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  set_lift_state(LIFT_DOWN);
+  set_hoarder_state(HOARDER_DOWN);
+  wait_hoarder();
+  chassis.set_drive_pid(15, SLOW_DRIVE_SPEED);
+  chassis.wait_drive();
+  set_hoarder_state(HOARDER_UP);
+  chassis.set_turn_pid(-58, TURN_SPEED);
+  chassis.wait_drive();  
+  chassis.set_drive_pid(15, SLOW_DRIVE_SPEED);
+  chassis.wait_drive();
+  pros::delay(200);
+  set_grabber_state(GRABBER_DOWN);
+  wait_grabber();
+  pros::delay(200);
+  set_lift_state(LIFT_UP);
+  chassis.set_turn_pid(122, TURN_SPEED);
+  chassis.wait_drive();
+  chassis.set_drive_pid(56, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  set_grabber_state(GRABBER_UP);
+  wait_grabber();
+  chassis.set_drive_pid(-1, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  // red/blue base on platform from hoarder 80pts
+  chassis.set_turn_pid(3, TURN_SPEED);
+  chassis.wait_drive();
+  set_lift_state(LIFT_DOWN);
+  pros::delay(400);
+  chassis.set_drive_pid(49, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  set_grabber_state(GRABBER_DOWN);
+  wait_grabber();
+  pros::delay(200);
+  set_lift_state(LIFT_UP);
+  chassis.set_drive_pid(-6, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  chassis.set_turn_pid(-121.5, TURN_SPEED);
+  chassis.wait_drive();
+  set_intake_state(INTAKE_FAST);
+  chassis.set_drive_pid(92, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  set_lift_state(LIFT_PLACE);
+  pros::delay(200);
+  set_grabber_state(GRABBER_UP);
+  wait_grabber();
+  // blue/red base on platform 120pts
+  chassis.set_drive_pid(-6, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  chassis.set_turn_pid(-218, TURN_SPEED);
+  chassis.wait_drive();
+  set_lift_state(LIFT_DOWN);
+  chassis.set_drive_pid(49, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  set_grabber_state(GRABBER_DOWN);
+  wait_grabber();
+  set_lift_state(LIFT_UP);
+  chassis.set_turn_pid(-48, TURN_SPEED);
+  chassis.wait_drive();
+  chassis.set_drive_pid(56, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  set_lift_state(LIFT_PLACE);
+  pros::delay(200);
+  set_grabber_state(GRABBER_UP);
+  wait_grabber();
+  // yellow base on platform 160pts
+  chassis.set_drive_pid(-4, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  chassis.set_turn_pid(-179, TURN_SPEED);
+  chassis.wait_drive();
+  set_lift_state(LIFT_DOWN);
+  pros::delay(200);
+  chassis.set_drive_pid(43, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  set_grabber_state(GRABBER_DOWN);
+  wait_grabber();
+  set_lift_state(LIFT_UP);
+  chassis.set_drive_pid(-4, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  chassis.set_turn_pid( -298 , TURN_SPEED);
+  chassis.wait_drive();
+  chassis.set_drive_pid(100, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  set_lift_state(LIFT_PLACE);
+  set_grabber_state(GRABBER_UP);
+  wait_grabber();
+  // big yellow base on platform 200pts
+  chassis.set_drive_pid(-6, DRIVE_SPEED);
+  chassis.wait_drive();
+  chassis.set_turn_pid( -265, TURN_SPEED);
+  chassis.wait_drive();
+  set_lift_state(LIFT_UP2);
+  chassis.set_drive_pid(-60, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  // red/blue base on platform 220pts
+  master.rumble("-- -- --");
+  }
 
 void comp_autonomous1() {
   chassis.set_drive_pid(50, DRIVE_SPEED, true);
@@ -206,10 +374,34 @@ void comp_autonomous1() {
   set_hoarder_state(HOARDER_DOWN);
   wait_hoarder();
 }
-
-
-
-
+void comp_autonomous2() {
+  chassis.set_drive_pid(50, DRIVE_SPEED, true);
+  chassis.wait_drive();  
+  set_lift_state(LIFT_DOWN);
+  set_grabber_state(GRABBER_DOWN);
+  wait_grabber();
+  set_lift_state(LIFT_PLACE);
+  chassis.set_drive_pid(-32, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  chassis.set_turn_pid( -87, TURN_SPEED);
+  chassis.wait_drive();
+  set_lift_state(LIFT_DOWN);
+  chassis.set_drive_pid(8, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  set_grabber_state(GRABBER_UP);
+  wait_grabber();
+  chassis.set_drive_pid(-8, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  chassis.set_turn_pid( -47, TURN_SPEED);
+  chassis.wait_drive();
+  chassis.set_drive_pid(52, DRIVE_SPEED, true);
+  chassis.wait_drive();
+  set_grabber_state(GRABBER_DOWN);
+  wait_grabber();
+  set_lift_state(LIFT_PLACE);
+  chassis.set_drive_pid(-55, DRIVE_SPEED, true);
+  chassis.wait_drive();
+}
 ///
 // Drive Example
 ///

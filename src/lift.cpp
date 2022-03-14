@@ -10,7 +10,7 @@ int lift_max_speed = 150;
 void set_lift_speed(int input) { lift_max_speed = abs(input); }
 void set_lift(int input) { lift_motor = input; }
 void reset_lift() { lift_motor.tare_position(); }
-
+bool did_reset = false;
 void set_lift_exit() { liftPID.set_exit_condition(80, 20, 300, 50, 500, 500); }
 
 std::string lift_state_to_string(lift_state input) {
@@ -47,7 +47,6 @@ void liftTask() {
   lift_motor.set_brake_mode(MOTOR_BRAKE_HOLD);
   double output = 0;
   long timer = 0;
-  bool did_reset = false;
   while (true) {
     if (current_lift_state != LIFT_FREE) {
       double current = lift_motor.get_position();
@@ -88,6 +87,26 @@ void wait_lift() {
   while (liftPID.exit_condition(lift_motor, true) == ez::RUNNING) {
     pros::delay(ez::util::DELAY_TIME);
   }
+}
+
+void init_lift() {
+  long timer = 0;
+  bool lift_moving = true;
+  lift_motor.set_brake_mode(MOTOR_BRAKE_HOLD);
+  lift_motor.move_velocity(-lift_max_speed);
+  while (lift_moving) {
+    bool stopped = (lift_motor.get_actual_velocity() == 0 ? true : false);
+    if (stopped) timer += util::DELAY_TIME;
+    if (timer >= 10 * util::DELAY_TIME) {
+      lift_motor.move_velocity(0);
+      lift_moving = false;
+      timer = 0;
+    }
+    pros::delay(util::DELAY_TIME);
+  }
+  reset_lift();
+  did_reset = true;
+  master.rumble("--");
 }
 
 bool last_l1 = 0;

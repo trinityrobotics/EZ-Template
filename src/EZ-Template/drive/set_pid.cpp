@@ -84,6 +84,30 @@ void Drive::set_drive_pid(double target, int speed, bool slew_on, bool toggle_he
   set_mode(DRIVE);
 }
 
+// Set drive PID
+void Drive::set_gps_drive_pid(double in_target_x, double in_target_y, int speed, bool slew_on, bool toggle_heading) {
+
+  // Print targets
+  if (print_toggle) printf("Drive Started... Target X: %f, Y: %f", target_x, target_y);
+  if (slew_on && print_toggle) printf(" with slew");
+  if (print_toggle) printf("\n");
+
+  target_x = in_target_x;
+  target_y = in_target_y;
+
+  pros::c::gps_status_s_t gpsData = gps.get_status();
+
+  // Set PID targets
+  distancePID.set_target(ez::util::get_distance(gpsData.x, gpsData.y, target_x, target_y) * TICK_PER_METER);
+
+  // Initialize slew
+  // slew_initialize(left_slew, slew_on, max_speed, l_target_encoder, left_sensor(), l_start, is_backwards);
+  // slew_initialize(right_slew, slew_on, max_speed, r_target_encoder, right_sensor(), r_start, is_backwards);
+
+  // Run task
+  set_mode(GPS_DRIVE);
+}
+
 // Set turn PID
 void Drive::set_turn_pid(double target, int speed) {
   // Print targets
@@ -96,6 +120,23 @@ void Drive::set_turn_pid(double target, int speed) {
 
   // Run task
   set_mode(TURN);
+}
+
+
+
+// Set turn PID
+void Drive::set_gps_turn_pid(double target_x, double target_y, int speed) {
+  // Print targets
+  if (print_toggle) printf("Turn Started... Target X Value: %f, Y Value %f\n", target_x, target_y);
+  pros::c::gps_status_s_t gpsData = gps.get_status();
+  double target_heading = 360 + ez::util::get_angle(gpsData.x, gpsData.y, target_x, target_y);
+  // Set PID targets
+  turnPID.set_target(target_heading);
+  headingPID.set_target(target_heading);  // Update heading target for next drive motion
+  set_max_speed(speed);
+
+  // Run task
+  set_mode(GPS_TURN);
 }
 
 // Set swing PID

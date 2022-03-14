@@ -147,5 +147,19 @@ double clip_num(double input, double max, double min) {
   return input;
 }
 
+double get_angle(double x1, double y1, double x2, double y2) {
+  //
+  // Use atan2 to get an angle between two points 
+  //
+  return (atan2(x2 - x1, y2 - y1)/M_PI*180);
+}
+
+double get_distance(double x1, double y1, double x2, double y2) {
+  //
+  // Return the hypotenuse
+  //
+  return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0);
+}
+
 }  // namespace util
 }  // namespace ez

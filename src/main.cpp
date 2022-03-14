@@ -34,20 +34,14 @@ Drive chassis (
   // eg. if your drive is 36:60 where the 60t is powered, your RATIO would be 0.6.
   ,DRIVE_GEAR_RATIO
 
-  // Uncomment if using tracking wheels
-  /*
-  // Left Tracking Wheel Ports (negative port will reverse it!)
-  // ,{1, 2} // 3 wire encoder
-  // ,8 // Rotation sensor
-
-  // Right Tracking Wheel Ports (negative port will reverse it!)
-  // ,{-3, -4} // 3 wire encoder
-  // ,-9 // Rotation sensor
-  */
-
-  // Uncomment if tracking wheels are plugged into a 3 wire expander
-  // 3 Wire Port Expander Smart Port
-  // ,1
+  // GPS Port
+  // ,DRIVE_GPS
+  // GPS Port X Offset
+  // ,DRIVE_GPS_X_OFFSET
+  // GPS Port Y Offset
+  // ,DRIVE_GPS_Y_OFFSET
+  // GPS Port Yaw Offset
+  // ,DRIVE_GPS_YAW_OFFSET
 );
 
 
@@ -77,9 +71,13 @@ void initialize() {
 
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.add_autons({
-    Auton("Example Turn\n\nTurn 3 times.", turn_example),
+    Auton("Skills Autonomous 2\n\n240 points from left side.", skills_autonomous2),
     Auton("Skills Autonomous 1\n\n240 points from left side.", skills_autonomous1),
+    Auton("Comp Autonomous 1\n\n41 points from right side.", comp_autonomous2),
     Auton("Comp Autonomous 1\n\n20 points from either side.", comp_autonomous1),
+    Auton("Skills GPS Autonomous 1\n\n240 points from left side.", skills_gps_auton1), 
+    Auton("GPS Debug\n\n", gps_debug),
+    Auton("Example Turn\n\nTurn 3 times.", turn_example),
     Auton("Example Drive\n\nDrive forward and come back.", drive_example),
     Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
     Auton("Drive and Turn\n\nSlow down during drive.", wait_until_change_speed),
@@ -89,6 +87,7 @@ void initialize() {
   });
 
   // Initialize chassis and auton selector
+  init_lift();
   chassis.initialize();
   ez::as::initialize();
 }
@@ -118,8 +117,6 @@ void disabled() {
 void competition_initialize() {
   // . . .
 }
-
-
 
 /**
  * Runs the user autonomous code. This function will be started in its own task

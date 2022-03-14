@@ -5,7 +5,11 @@
 extern Drive chassis;
 
 void skills_autonomous1();
+void skills_autonomous2();
+void skills_gps_auton1();
+void gps_debug();
 void comp_autonomous1();
+void comp_autonomous2();
 void drive_example();
 void turn_example();
 void drive_and_turn();
