@@ -95,10 +95,12 @@ void Drive::set_gps_drive_pid(double in_target_x, double in_target_y, int speed,
   target_x = in_target_x;
   target_y = in_target_y;
 
+  set_max_speed(speed);
+  
   pros::c::gps_status_s_t gpsData = gps.get_status();
 
   // Set PID targets
-  distancePID.set_target(ez::util::get_distance(gpsData.x, gpsData.y, target_x, target_y) * TICK_PER_METER);
+  // distancePID.set_target(ez::util::get_distance(gpsData.x, gpsData.y, target_x, target_y) * TICK_PER_METER);
 
   // Initialize slew
   // slew_initialize(left_slew, slew_on, max_speed, l_target_encoder, left_sensor(), l_start, is_backwards);

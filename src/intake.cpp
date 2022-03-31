@@ -2,7 +2,7 @@
 #include "pros/adi.hpp"
 
 pros::Motor intake_motor(INTAKE_MOTOR_PORT, INTAKE_MOTOR_GEARSET, INTAKE_MOTOR_REVERSED, MOTOR_ENCODER_DEGREES);
-int intake_max_speed = 50;
+int intake_max_speed = 300;
 
 std::string intake_state_to_string(intake_state input) {
   switch (input) {

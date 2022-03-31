@@ -11,11 +11,11 @@
 Drive chassis (
   // Left Chassis Ports (negative port will reverse it!)
   //   the first port is the sensored port (when trackers are not used!)
-  {DRIVE_MOTOR_L1, DRIVE_MOTOR_L2}
+  {DRIVE_MOTOR_L1, DRIVE_MOTOR_L2, DRIVE_MOTOR_L3}
 
   // Right Chassis Ports (negative port will reverse it!)
   //   the first port is the sensored port (when trackers are not used!)
-  ,{DRIVE_MOTOR_R1, DRIVE_MOTOR_R2}
+  ,{DRIVE_MOTOR_R1, DRIVE_MOTOR_R2, DRIVE_MOTOR_R3}
 
   // IMU Port
   ,DRIVE_IMU
@@ -35,13 +35,13 @@ Drive chassis (
   ,DRIVE_GEAR_RATIO
 
   // GPS Port
-  // ,DRIVE_GPS
+  ,DRIVE_GPS
   // GPS Port X Offset
-  // ,DRIVE_GPS_X_OFFSET
+  ,DRIVE_GPS_X_OFFSET
   // GPS Port Y Offset
-  // ,DRIVE_GPS_Y_OFFSET
+  ,DRIVE_GPS_Y_OFFSET
   // GPS Port Yaw Offset
-  // ,DRIVE_GPS_YAW_OFFSET
+  ,DRIVE_GPS_YAW_OFFSET
 );
 
 
@@ -87,7 +87,7 @@ void initialize() {
   });
 
   // Initialize chassis and auton selector
-  init_lift();
+  // init_lift();
   chassis.initialize();
   ez::as::initialize();
 }

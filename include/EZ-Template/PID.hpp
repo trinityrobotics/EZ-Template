@@ -101,6 +101,14 @@ class PID {
   double compute(double current);
 
   /**
+   * Computes PID for distance.
+   *
+   * \param current
+   *        Current sensor library.
+   */
+  double compute_distance(double current);
+
+  /**
    * Returns target value.
    */
   double get_target();

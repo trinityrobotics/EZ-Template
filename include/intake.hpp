@@ -2,7 +2,7 @@
 #include "api.h"
 
 #define INTAKE_STOP_TIMEOUT 100
-#define INTAKE_REVERSE_TIME 3000
+#define INTAKE_REVERSE_TIME 500
 enum intake_state {
   INTAKE_REVERSE = -1,
   INTAKE_OFF = 0,

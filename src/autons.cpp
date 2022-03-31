@@ -82,7 +82,7 @@ void skills_gps_auton1(void) {
   // pros::delay(1000);
   // chassis.set_gps_turn_pid(0,0, TURN_SPEED);
   // chassis.wait_drive();
-  chassis.set_gps_turn_pid(0,0, TURN_SPEED);
+  chassis.set_gps_turn_pid(0,0,30);
   chassis.wait_drive();
   master.rumble("- - -");
   pros::delay(5000);
@@ -94,10 +94,11 @@ void skills_gps_auton1(void) {
 void gps_debug(void) {
   while (1) {
     pros::c::gps_status_s_t gpsData = chassis.gps.get_status();
-    double current_heading = fmod(chassis.gps.get_heading() + 180, 360);
+    double current_heading = fmod(chassis.gps.get_heading() - 90, 360);
     // double target_heading = fmod((atan2(y2 - y1, x2 - x1)/M_PI*180),360);
     double target_heading = (atan2(0 - gpsData.x, 0 - gpsData.y)/M_PI*180);
     double target_distance = ez::util::get_distance(gpsData.x, gpsData.y, 0, 0);
+    pros::screen::erase();
     pros::screen::print(pros::E_TEXT_SMALL, 2, "Error: %f\n", chassis.gps.get_error());
     pros::screen::print(pros::E_TEXT_SMALL, 3, "Position X: %f, Y: %f\n", gpsData.x, gpsData.y);
     pros::screen::print(pros::E_TEXT_SMALL, 4, "Heading Current: %f; Target: %f\n", current_heading, 360 + target_heading);

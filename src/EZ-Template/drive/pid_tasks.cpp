@@ -63,27 +63,34 @@ void Drive::drive_pid_task() {
 void Drive::gps_drive_pid_task() {
   // Get GPS Data
   pros::c::gps_status_s_t gpsData = gps.get_status();
-  double current_heading = fmod(gps.get_heading() + 180, 360);
-  double target_heading = 360 + ez::util::get_angle(gpsData.x, gpsData.y, target_x, target_y);
-  double current_distance = ez::util::get_distance(gpsData.x, gpsData.y, target_x, target_y) * TICK_PER_METER;
-  double pid_target = distancePID.get_target();
-  double distance_travelled = pid_target - current_distance > 0 ? pid_target - current_distance : 0;
+  double current_heading = fmod(gps.get_heading() - gps_yaw_offset, 360);
+  double target_heading = ez::util::get_angle(gpsData.x, gpsData.y, target_x, target_y);
+  double target_distance = ez::util::get_distance(gpsData.x, gpsData.y, target_x, target_y) * 100;
 
-  if (abs(target_heading - current_heading) < 10 ) {
-    headingPID.set_target(target_heading);
-  }
-
-  pros::screen::print(pros::E_TEXT_SMALL, 3, "Distance PID: %f, Current: %f\n", pid_target, current_distance);
-
+  // if (abs(target_heading - current_heading) < 10 ) {
+  //   headingPID.set_target(target_heading);
+  // }
+  
   // Compute PID
-  distancePID.compute(distance_travelled * 100);
+  distancePID.compute_distance(target_distance * 100);
+  headingPID.set_target(target_heading);
   headingPID.compute(current_heading);
 
-  // Combine heading and drive
-  double l_out = distancePID.output + headingPID.output;
-  double r_out = distancePID.output - headingPID.output;
+  double drive_speed = util::clip_num(distancePID.output, max_speed, -max_speed);
+  double turn_speed = util::clip_num(headingPID.output, 10, -10);
 
-  pros::screen::print(pros::E_TEXT_SMALL, 4, "PID Distance: %f, Heading: %f\n", distancePID.output, headingPID.output);
+  // Combine heading and drive
+  double l_out = drive_speed + turn_speed;
+  double r_out = drive_speed - turn_speed;
+  // double l_out = speed;
+  // double r_out = speed;
+
+  pros::screen::print(pros::E_TEXT_SMALL, 1, "Driving...\n");
+  pros::screen::print(pros::E_TEXT_SMALL, 2, "Error: %4.2f\n", gps.get_error());
+  pros::screen::print(pros::E_TEXT_SMALL, 3, "Position X: %1.2f, Y: %1.2f\n", gpsData.x, gpsData.y);
+  pros::screen::print(pros::E_TEXT_SMALL, 4, "Heading Current: %3.2f; Target: %3.2\n", current_heading, target_heading);
+  pros::screen::print(pros::E_TEXT_SMALL, 5, "Distance Target: %1.2f\n", target_distance);
+  pros::screen::print(pros::E_TEXT_SMALL, 6, "Drive: %3.0f, Heading: %3.2f\n", drive_speed, turn_speed);
 
   // Set motors
   if (drive_toggle)
@@ -114,18 +121,28 @@ void Drive::turn_pid_task() {
 void Drive::gps_turn_pid_task() {
   // Get GPS Data
   pros::c::gps_status_s_t gpsData = gps.get_status();
-  double current_heading = fmod(gps.get_heading() + 180, 360);
-  double target_heading = 360 + ez::util::get_angle(gpsData.x, gpsData.y, target_x, target_y);
+  double current_heading = fmod(gps.get_heading() - gps_yaw_offset, 360);
+  double target_heading = ez::util::get_angle(gpsData.x, gpsData.y, target_x, target_y);
+  double target_distance = ez::util::get_distance(gpsData.x, gpsData.y, target_x, target_y);
+
+
 
   if (abs(target_heading - current_heading) < 10 ) {
     turnPID.set_target(target_heading);
   }
 
   // Compute PID
-  turnPID.compute(fmod(gps.get_heading() + 180, 360));
+  turnPID.compute(current_heading);
 
   // Clip gyroPID to max speed
   double gyro_out = util::clip_num(turnPID.output, max_speed, -max_speed);
+
+  pros::screen::erase();
+  pros::screen::print(pros::E_TEXT_SMALL, 2, "Error: %f\n", gps.get_error());
+  pros::screen::print(pros::E_TEXT_SMALL, 3, "Position X: %f, Y: %f\n", gpsData.x, gpsData.y);
+  pros::screen::print(pros::E_TEXT_SMALL, 4, "Heading Current: %f; Target: %f\n", current_heading, target_heading);
+  pros::screen::print(pros::E_TEXT_SMALL, 5, "Distance Target: %f\n", target_distance);
+  pros::screen::print(pros::E_TEXT_SMALL, 6, "PID Output: %f\n", gyro_out);
 
   // Clip the speed of the turn when the robot is within StartI, only do this when target is larger then StartI
   if (turnPID.constants.ki != 0 && (fabs(turnPID.get_target()) > turnPID.constants.start_i && fabs(turnPID.error) < turnPID.constants.start_i)) {

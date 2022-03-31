@@ -158,7 +158,13 @@ double get_distance(double x1, double y1, double x2, double y2) {
   //
   // Return the hypotenuse
   //
-  return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0);
+  double distance = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.0);
+  double direction = (atan2(x2 - x1, y2 - y1)/M_PI*180) - 90;
+  if (direction >= 90 || direction <= 270) {
+    return -1 * direction;
+  } else {
+    return direction;
+  }
 }
 
 }  // namespace util

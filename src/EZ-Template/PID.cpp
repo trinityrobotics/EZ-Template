@@ -54,6 +54,25 @@ void PID::set_exit_condition(int p_small_exit_time, double p_small_error, int p_
 void PID::set_target(double input) { target = input; }
 double PID::get_target() { return target; }
 
+double PID::compute_distance(double distance) {
+  error = distance;
+  derivative = error - prev_error;
+
+  if (constants.ki != 0) {
+    if (fabs(error) < constants.start_i)
+      integral += error;
+
+    if (util::sgn(error) != util::sgn(prev_error))
+      integral = 0;
+  }
+
+  output = (error * constants.kp) + (integral * constants.ki) + (derivative * constants.kd);
+
+  prev_error = error;
+
+  return output;
+}
+
 double PID::compute(double current) {
   error = target - current;
   derivative = error - prev_error;
