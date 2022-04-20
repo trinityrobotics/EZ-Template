@@ -7,6 +7,8 @@ extern Drive chassis;
 void skills_autonomous1();
 void skills_autonomous2();
 void skills_gps_auton1();
+void simple_test();
+void gps_test();
 void gps_debug();
 void comp_autonomous1();
 void comp_autonomous2();

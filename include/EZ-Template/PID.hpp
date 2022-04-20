@@ -101,12 +101,12 @@ class PID {
   double compute(double current);
 
   /**
-   * Computes PID for distance.
+   * Computes PID given delta.
    *
-   * \param current
-   *        Current sensor library.
+   * \param delta
+   *        The delta (difference) in the start and finish.
    */
-  double compute_distance(double current);
+  double compute_delta(double delta);
 
   /**
    * Returns target value.

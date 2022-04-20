@@ -24,14 +24,18 @@ std::string hoarder_state_to_string(hoarder_state input) {
 // hoarder_state target_hoarder_state = HOARDER_UP;
 // bool hoarder_moving = false;
 void set_hoarder_state(hoarder_state new_hoarder_state) {
-//   if (new_hoarder_state == HOARDER_DOWN) {
+  if (new_hoarder_state == HOARDER_DOWN) {
+    horder_piston1.set_value(false);
+    horder_piston2.set_value(false);
 //     hoarder_motor.set_brake_mode(MOTOR_BRAKE_COAST);
 //     hoarder_motor.move_velocity(hoarder_max_speed);
-//   } else {
+  } else {
+    horder_piston1.set_value(true);
+    horder_piston2.set_value(true);
 //     // hoarder_motor.move_absolute(0, hoarder_max_speed);
 //     hoarder_motor.set_brake_mode(MOTOR_BRAKE_BRAKE);
 //     hoarder_motor.move_velocity(-hoarder_max_speed);
-//   }
+  }
 //   target_hoarder_state = new_hoarder_state;
 //   hoarder_moving = true;
 //   std::cout << "\nNew Hoarder State: " << hoarder_state_to_string(new_hoarder_state);
@@ -69,12 +73,12 @@ void wait_hoarder() {
 // pros::Task hoarder_task(hoarderTask);
 
 void hoarder_control() {
-  if (master.get_digital_new_press(DIGITAL_L1)) {
+  if (master.get_digital_new_press(DIGITAL_R1)) {
     horder_piston1.set_value(true);
     horder_piston2.set_value(true);
     // set_hoarder_state(HOARDER_UP);
   }
-  if (master.get_digital_new_press(DIGITAL_L2)) {
+  if (master.get_digital_new_press(DIGITAL_R2)) {
     horder_piston1.set_value(false);
     horder_piston2.set_value(false);
     // set_hoarder_state(HOARDER_DOWN);

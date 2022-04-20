@@ -102,9 +102,24 @@ double clip_num(double input, double max, double min);
 double get_angle(double x1, double y1, double x2, double y2);
 
 /**
+ * Returns heading corrected for GPS offset
+ */
+double corrected_heading(double original_heading, double gps_offset);
+
+/**
  * Returns angle between two points
  */
-double get_distance(double x1, double y1, double x2, double y2);
+double get_distance(double x1, double y1, double x2, double y2, double offset = 0);
+
+/**
+ * Returns inches given meters
+ */
+double m_to_in(double meters);
+
+/**
+ * Returns meters given inches
+ */
+double in_to_m(double inches);
 
 /**
  * Is the SD card plugged in?

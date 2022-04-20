@@ -13,6 +13,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #include "EZ-Template/PID.hpp"
 #include "EZ-Template/util.hpp"
 #include "pros/motors.h"
+#include "trc/util.hpp"
 
 using namespace ez;
 
@@ -56,7 +57,7 @@ class Drive {
   /**
    * GPS sensor.
    */
-  pros::Gps gps;
+  std::vector<pros::Gps> mgps;
 
   /**
    * Inertial sensor.
@@ -94,6 +95,9 @@ class Drive {
   PID rightPID;
   PID backward_drivePID;
   PID swingPID;
+  PID GPSturnPID;
+  PID GPSheadingPID;
+  PID GPSdrivePID;
 
   /**
    * Current mode of the drive.
@@ -159,10 +163,10 @@ class Drive {
    *        The x offset of the GPS sesnor.
    * \param gps_y_offset
    *        The y offset of the GPS sesnor.
-   * \param gps_yaw_offset
+   * \param gps_yaw_offset_
    *        The roll offset of the GPS sesnor.
    */
-  Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports, int imu_port, double wheel_diameter, double ticks, double ratio, int gps_port, double gps_x_offset, double gps_y_offset, double gps_yaw_offset);
+  Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports, int imu_port, double wheel_diameter, double ticks, double ratio, std::vector<int> gps_ports, std::vector<double> gps_x_offsets, std::vector<double> gps_y_offsets, std::vector<double> gps_yaw_offsets);
 
   /**
    * Creates a Drive Controller using encoders plugged into the brain.
@@ -502,6 +506,56 @@ class Drive {
   double get_gyro();
 
   /**
+   * Gets the current heading of the chassis
+   */
+  double get_heading();
+
+  /**
+   * Gets the status from the most accurate gps
+   */
+  pros::c::gps_status_s_t get_mgps_status();
+
+  /**
+   * Gets the error from the most accurate gps
+   */
+  double get_mgps_error();
+
+  /**
+   * Gets the heading from the most accurate gps
+   */
+  double get_mgps_heading();
+
+  /**
+   * Gets the heading to the stored target location
+   */
+  double get_target_heading(bool use_cached = false);
+
+  /**
+   * Gets the heading to the provided target location
+   */
+  double get_target_heading(double target_x, double target_y);
+
+  /**
+   * Gets the heading to the target when in drive mode
+   */
+  double get_drive_bearing(bool use_cached = false);
+
+  /**
+   * Gets the relative heading to the target
+   */
+  double get_target_bearing(bool use_cached = false);
+
+  /**
+   * Gets the distance to the stored target location in meters
+   */
+  double get_target_distance();
+
+  /**
+   * Gets the distance to the given target in meters
+   */
+  double get_target_distance(double target_x, double target_y, double target_offset = 0);
+
+  /**
    * Calibrates the IMU, reccomended to run in initialize().
    *
    * \param run_loading_animation
@@ -515,9 +569,14 @@ class Drive {
   void imu_loading_display(int iter);
 
   /**
+   * Set the initital position of the chassis.
+   */
+  void set_position(double x, double y, double heading);
+
+  /**
    * Set the target for the chassis.
    */
-  void set_target(double input_x, double input_y);
+  void set_target(double input_x, double input_y, double offset = 0);
 
   /////
   //
@@ -542,18 +601,20 @@ class Drive {
   /**
    * Sets the robot to move forward using PID.
    *
-   * \param target_x
+   * \param target_x_
    *        target x value
-   * \param target_y
+   * \param target_y_
    *        target y value
    * \param speed
    *        0 to 127, max speed during motion
+   * \param offset
+   *        offset in meters from the target
    * \param slew_on
    *        ramp up from slew_min to speed over slew_distance.  only use when you're going over about 14"
    * \param toggle_heading
    *        toggle for heading correction
    */
-  void set_gps_drive_pid(double target_x, double target_y, int speed, bool slew_on = false, bool toggle_heading = true);
+  void set_gps_drive_pid(double target_x_, double target_y_, int speed, double offset = 0, bool slew_on = false, bool toggle_heading = true);
 
   /**
    * Sets the robot to turn using PID.
@@ -568,14 +629,14 @@ class Drive {
   /**
    * Sets the robot to turn using PID.
    *
-   * \param target_x
+   * \param target_x_
    *        target x value
-   * \param target_y
+   * \param target_y_
    *        target y value
    * \param speed
    *        0 to 127, max speed during motion
    */
-  void set_gps_turn_pid(double target_x, double target_y, int speed);
+  void set_gps_turn_pid(double target_x_, double target_y_, int speed);
 
   /**
    * Turn using only the left or right side.
@@ -598,6 +659,11 @@ class Drive {
    * Resets all PID targets to 0.
    */
   void set_angle(double angle);
+
+  /**
+   * Wait until the GPS has caught side of the barcodes.
+   */
+  void wait_gps();
 
   /**
    * Lock the code in a while loop until the robot has settled.
@@ -708,6 +774,11 @@ class Drive {
    * Exit condition for driving.
    */
   const int drive_exit = 3;
+
+  /**
+   * Exit condition for driving.
+   */
+  const int heading_exit = 4;
 
   /**
    * Returns current tick_per_inch()
@@ -888,8 +959,11 @@ class Drive {
   /**
    * GPS
    */
-  double gps_yaw_offset;
-  double target_x;
-  double target_y;
+  std::vector<double> gps_yaw_offset_;
+  double target_x_;
+  double target_y_;
+  double target_offset_;
+  double current_heading_;
+  double target_heading_;
 
 };

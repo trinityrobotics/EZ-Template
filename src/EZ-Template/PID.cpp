@@ -54,8 +54,8 @@ void PID::set_exit_condition(int p_small_exit_time, double p_small_error, int p_
 void PID::set_target(double input) { target = input; }
 double PID::get_target() { return target; }
 
-double PID::compute_distance(double distance) {
-  error = distance;
+double PID::compute_delta(double delta) {
+  error = delta;
   derivative = error - prev_error;
 
   if (constants.ki != 0) {

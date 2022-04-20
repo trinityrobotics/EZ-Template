@@ -11,11 +11,11 @@
 Drive chassis (
   // Left Chassis Ports (negative port will reverse it!)
   //   the first port is the sensored port (when trackers are not used!)
-  {DRIVE_MOTOR_L1, DRIVE_MOTOR_L2, DRIVE_MOTOR_L3}
+  DRIVE_LEFT_MOTORS
 
   // Right Chassis Ports (negative port will reverse it!)
   //   the first port is the sensored port (when trackers are not used!)
-  ,{DRIVE_MOTOR_R1, DRIVE_MOTOR_R2, DRIVE_MOTOR_R3}
+  ,DRIVE_RIGHT_MOTORS
 
   // IMU Port
   ,DRIVE_IMU
@@ -35,13 +35,13 @@ Drive chassis (
   ,DRIVE_GEAR_RATIO
 
   // GPS Port
-  ,DRIVE_GPS
+  ,DRIVE_GPS_PORTS
   // GPS Port X Offset
-  ,DRIVE_GPS_X_OFFSET
+  ,DRIVE_GPS_X_OFFSETS
   // GPS Port Y Offset
-  ,DRIVE_GPS_Y_OFFSET
+  ,DRIVE_GPS_Y_OFFSETS
   // GPS Port Yaw Offset
-  ,DRIVE_GPS_YAW_OFFSET
+  ,DRIVE_GPS_YAW_OFFSETS
 );
 
 
@@ -76,7 +76,9 @@ void initialize() {
     Auton("Comp Autonomous 1\n\n41 points from right side.", comp_autonomous2),
     Auton("Comp Autonomous 1\n\n20 points from either side.", comp_autonomous1),
     Auton("Skills GPS Autonomous 1\n\n240 points from left side.", skills_gps_auton1), 
+    Auton("GPS Test\n\n", gps_test),
     Auton("GPS Debug\n\n", gps_debug),
+    Auton("Simple Test\n\n", simple_test),
     Auton("Example Turn\n\nTurn 3 times.", turn_example),
     Auton("Example Drive\n\nDrive forward and come back.", drive_example),
     Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
@@ -89,7 +91,10 @@ void initialize() {
   // Initialize chassis and auton selector
   // init_lift();
   chassis.initialize();
+  set_grabber_state(GRABBER_DOWN);
+  set_hoarder_state(HOARDER_DOWN);
   ez::as::initialize();
+  reset_lift();
 }
 
 
@@ -171,6 +176,20 @@ void opcontrol() {
     // . . .
     // Put more user control code here!
     // . . .
+
+    if (master.get_digital_new_press(DIGITAL_RIGHT)) {
+      chassis.set_drive_brake(MOTOR_BRAKE_HOLD);
+    }
+    if (master.get_digital_new_press(DIGITAL_LEFT)) {
+      chassis.set_drive_brake(MOTOR_BRAKE_COAST);
+    }
+
+    pros::c::gps_status_s_t gpsData = chassis.get_mgps_status();
+    pros::screen::erase();
+    pros::screen::print(pros::E_TEXT_SMALL, 1, "Driving...\n");
+    pros::screen::print(pros::E_TEXT_SMALL, 2, "Error: %f\n", chassis.get_mgps_error());
+    pros::screen::print(pros::E_TEXT_SMALL, 3, "Position X: %f, Y: %f\n", gpsData.x, gpsData.y);
+    pros::screen::print(pros::E_TEXT_SMALL, 4, "Heading Current: %f\n", chassis.get_heading());
 
     pros::delay(ez::util::DELAY_TIME); // This is used for timer calculations!  Keep this ez::util::DELAY_TIME
   }

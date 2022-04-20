@@ -18,7 +18,6 @@ using namespace ez;
 Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports,
              int imu_port, double wheel_diameter, double ticks, double ratio)
     : imu(imu_port),
-      gps(-1),
       left_tracker(-1, -1, false),   // Default value
       right_tracker(-1, -1, false),  // Default value
       left_rotation(-1),
@@ -48,17 +47,21 @@ Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_por
 // Constructor for integrated encoders and GPS augmented
 Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_ports,
              int imu_port, double wheel_diameter, double ticks, double ratio,
-             int gps_port, double gps_x_offset, double gps_y_offset, double in_gps_yaw_offset)
+             std::vector<int> gps_ports, std::vector<double> gps_x_offsets, std::vector<double> gps_y_offsets, std::vector<double> gps_yaw_offsets)
     : imu(imu_port),
-      gps(gps_port),
       left_tracker(-1, -1, false),   // Default value
       right_tracker(-1, -1, false),  // Default value
       left_rotation(-1),
       right_rotation(-1),
       ez_auto([this] { this->ez_auto_task(); }) {
   is_tracker = DRIVE_INTEGRATED;
-  gps.set_offset(gps_x_offset, gps_y_offset);
-  gps_yaw_offset = in_gps_yaw_offset;
+  int i = 0;
+  for (auto port : gps_ports) {
+    pros::Gps gps(gps_ports[i], gps_x_offsets[i], gps_y_offsets[i]);
+    mgps.push_back(gps);
+    gps_yaw_offset_.push_back(gps_yaw_offsets[i]);
+    i++;
+  }
 
   // Set ports to a global vector
   for (auto i : left_motor_ports) {
@@ -85,7 +88,6 @@ Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_por
              int imu_port, double wheel_diameter, double ticks, double ratio,
              std::vector<int> left_tracker_ports, std::vector<int> right_tracker_ports)
     : imu(imu_port),
-      gps(-1),
       left_tracker(abs(left_tracker_ports[0]), abs(left_tracker_ports[1]), util::is_reversed(left_tracker_ports[0])),
       right_tracker(abs(right_tracker_ports[0]), abs(right_tracker_ports[1]), util::is_reversed(right_tracker_ports[0])),
       left_rotation(-1),
@@ -117,7 +119,6 @@ Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_por
              int imu_port, double wheel_diameter, double ticks, double ratio,
              std::vector<int> left_tracker_ports, std::vector<int> right_tracker_ports, int expander_smart_port)
     : imu(imu_port),
-      gps(-1),
       left_tracker({expander_smart_port, abs(left_tracker_ports[0]), abs(left_tracker_ports[1])}, util::is_reversed(left_tracker_ports[0])),
       right_tracker({expander_smart_port, abs(right_tracker_ports[0]), abs(right_tracker_ports[1])}, util::is_reversed(right_tracker_ports[0])),
       left_rotation(-1),
@@ -149,7 +150,6 @@ Drive::Drive(std::vector<int> left_motor_ports, std::vector<int> right_motor_por
              int imu_port, double wheel_diameter, double ratio,
              int left_rotation_port, int right_rotation_port)
     : imu(imu_port),
-      gps(-1),
       left_tracker(-1, -1, false),   // Default value
       right_tracker(-1, -1, false),  // Default value
       left_rotation(abs(left_rotation_port)),
@@ -306,7 +306,109 @@ bool Drive::left_over_current() { return left_motors.front().is_over_current(); 
 
 void Drive::reset_gyro(double new_heading) { imu.set_rotation(new_heading); }
 double Drive::get_gyro() { return imu.get_rotation(); }
-void Drive::set_target(double input_x, double input_y) { target_x = input_x; target_y = input_y;}
+
+void Drive::wait_gps() {
+  while(get_mgps_error() > .02) {
+    pros::delay(util::DELAY_TIME);
+  }
+}
+
+double Drive::get_mgps_error() {
+  double return_error;
+  double gps_error = std::numeric_limits<double>::max();
+  for (auto gps : mgps) {
+    if (gps.get_error() < gps_error) {
+      gps_error = gps.get_error();
+    }
+  }
+  return gps_error;
+}
+
+double Drive::get_mgps_heading() {
+  double gps_heading;
+  double gps_error = std::numeric_limits<double>::max();
+  int i = 0;
+  for (auto gps : mgps) {
+    if (gps.get_error() < gps_error) {
+      gps_heading = ez::util::corrected_heading(gps.get_heading(), gps_yaw_offset_[i]);
+      if (current_heading_ == 0) {
+        current_heading_ = gps_heading;
+      } else {
+        current_heading_ = (current_heading_ + gps_heading) / 2;
+      }
+      gps_error = gps.get_error();
+    }
+    i++;
+  }
+  return current_heading_;
+}
+
+pros::c::gps_status_s_t Drive::get_mgps_status() {
+  pros::c::gps_status_s_t gps_status;
+  double gps_error = std::numeric_limits<double>::max();
+  for (auto gps : mgps) {
+    if (gps.get_error() < gps_error) {
+      gps_status = gps.get_status();
+      gps_error = gps.get_error();
+    }
+  }
+  return gps_status;
+}
+
+double Drive::get_heading() {
+  return get_mgps_heading(); 
+}
+
+double Drive::get_target_heading(bool use_cached) {
+  if (!use_cached) {
+    pros::c::gps_status_s_t gpsData = get_mgps_status();
+    target_heading_ = ez::util::get_angle(gpsData.x, gpsData.y, target_x_, target_y_);  
+  }
+  return target_heading_;
+}
+
+double Drive::get_target_heading(double target_x, double target_y) {
+  pros::c::gps_status_s_t gpsData = get_mgps_status();
+  return ez::util::get_angle(gpsData.x, gpsData.y, target_x, target_y);
+}
+
+double Drive::get_target_bearing(bool use_cached) {
+  double current_heading_ = Drive::get_heading();
+  double target_heading_ = Drive::get_target_heading(use_cached);
+  double bearing = target_heading_ - current_heading_ < 0 ? target_heading_ - current_heading_ + 360 : target_heading_ - current_heading_;
+  // The target is to our left, so reverse the sign/direction.
+  if (bearing > 180) {
+    return bearing - 360;
+  } else {
+    return bearing;
+  } 
+}
+
+double Drive::get_target_distance() {
+  pros::c::gps_status_s_t gpsData = get_mgps_status();
+  return ez::util::get_distance(gpsData.x, gpsData.y, target_x_, target_y_, target_offset_);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           double target_heading_ = ez::util::get_angle(gpsData.x, gpsData.y, target_x_, target_y_);
+}
+
+double Drive::get_target_distance(double target_x, double target_y, double target_offset) {
+  pros::c::gps_status_s_t gpsData = get_mgps_status();
+  return ez::util::get_distance(gpsData.x, gpsData.y, target_x, target_y, target_offset);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           double target_heading_ = ez::util::get_angle(gpsData.x, gpsData.y, target_x_, target_y_);
+}
+
+void Drive::set_position(double x, double y, double heading) {
+  double heading_offset;
+  int i = 0;
+  for (auto gps : mgps) {
+    heading_offset =+ gps_yaw_offset_[i];
+    gps.set_position(x, y, heading_offset);
+    i++;
+  }
+}
+
+void Drive::set_target(double input_x, double input_y, double offset) {
+  target_x_ = input_x;
+  target_y_ = input_y;
+  target_offset_ = offset;
+}
 
 void Drive::imu_loading_display(int iter) {
   // If the lcd is already initialized, don't run this function

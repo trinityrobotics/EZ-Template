@@ -9,7 +9,6 @@ pros::Motor lift_motor(LIFT_MOTOR_PORT, LIFT_MOTOR_GEARSET, LIFT_MOTOR_REVERSED,
 int lift_max_speed = 150;
 void set_lift_speed(int input) { lift_max_speed = abs(input); }
 void set_lift(int input) { lift_motor = input; }
-void reset_lift() { lift_motor.tare_position(); }
 bool did_reset = false;
 void set_lift_exit() { liftPID.set_exit_condition(80, 20, 300, 50, 500, 500); }
 
@@ -33,7 +32,7 @@ std::string lift_state_to_string(lift_state input) {
   }
 }
 
-lift_state current_lift_state;
+lift_state current_lift_state = LIFT_DOWN;
 void set_lift_state(lift_state input) {
   if (input != LIFT_FREE) {
     set_lift_speed(current_lift_state > input ? SLOW_SPEED : FAST_SPEED);
@@ -41,6 +40,23 @@ void set_lift_state(lift_state input) {
   }
   current_lift_state = input;
   std::cout << "\nNew Lift State: " << lift_state_to_string(input);
+}
+
+void reset_lift() {
+  pros::screen::print(pros::E_TEXT_SMALL, 1, "Resetting Lift...\n");
+  long timer = 0;
+  lift_motor.set_brake_mode(MOTOR_BRAKE_HOLD);
+  lift_motor.move_velocity(-20);
+  while (true) {
+    bool check = lift_motor.get_actual_velocity() == 0 ? true : false;
+    if (check) timer += util::DELAY_TIME;
+    if (timer >= 250) {
+      break;
+    }
+    pros::delay(util::DELAY_TIME);
+  }
+  lift_motor.move_velocity(0);
+  lift_motor.tare_position();
 }
 
 void liftTask() {
@@ -104,7 +120,6 @@ void init_lift() {
     }
     pros::delay(util::DELAY_TIME);
   }
-  reset_lift();
   did_reset = true;
   master.rumble("--");
 }
